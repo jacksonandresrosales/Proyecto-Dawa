@@ -1,0 +1,1469 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ServiGest Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Prototipo navegable de ServiGest. Consola sobria: menú lateral + contenido. Tokens de docs/ux/06-sistema-visual.md */
+:root{
+  --bg:#FBFBFB; --card:#FFFFFF; --fg:#333333; --muted:#777777; --soft:#F8F8F8; --hover:#F2F2F2;
+  --border:#EDEDED; --line:#F3F3F3; --input:#E1E1E1; --primary:#2567FF; --primary-fg:#FFFFFF;
+  --danger:#C4281C; --overlay:#00000059; --shadow:0 1px 3px #00000008; --shadow-lg:0 16px 48px #0000001F;
+  --neutral:#636366; --neutral-bg:#F2F2F7; --neutral-dot:#AEAEB2;
+  --warning:#8A5F00; --warning-bg:#FFF7E0; --warning-dot:#F2A900;
+  --accent:#07479E; --accent-bg:#EAF1FF; --accent-dot:#2567FF;
+  --info:#1B4FE0; --info-bg:#EAF1FF; --info-dot:#2567FF;
+  --review:#9A5200; --review-bg:#FFF1DE; --review-dot:#FF9500;
+  --success:#1B7A3A; --success-bg:#E7F7EC; --success-dot:#34C759;
+  --dangert:#C4281C; --danger-bg:#FFEBE9; --danger-dot:#FF3B30;
+  --critical:#D92D20; --on-critical:#FFFFFF;
+  --sans:Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono:"Geist Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E0E10; --card:#151517; --fg:#E8E8EA; --muted:#9A9AA2; --soft:#1C1C1F; --hover:#232327;
+  --border:#2A2A2E; --line:#202024; --input:#34343A; --primary:#4073D4; --primary-fg:#FFFFFF;
+  --danger:#FF7A70; --overlay:#000000A6; --shadow:none; --shadow-lg:0 16px 48px #00000080;
+  --neutral:#A6A6AE; --neutral-bg:#FFFFFF12; --neutral-dot:#6B6B73;
+  --warning:#F5C451; --warning-bg:#F5C4511F; --warning-dot:#F5C451;
+  --accent:#8DB4FF; --accent-bg:#4D8BFF24; --accent-dot:#4D8BFF;
+  --info:#8DB4FF; --info-bg:#4D8BFF29; --info-dot:#4D8BFF;
+  --review:#FFB35C; --review-bg:#FF742624; --review-dot:#FF8A3D;
+  --success:#5BD68F; --success-bg:#41D97F24; --success-dot:#41D97F;
+  --dangert:#FF7A70; --danger-bg:#FF453A29; --danger-dot:#FF453A;
+  --critical:#D34247; --on-critical:#FFFFFF; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E0E10; --card:#151517; --fg:#E8E8EA; --muted:#9A9AA2; --soft:#1C1C1F; --hover:#232327;
+  --border:#2A2A2E; --line:#202024; --input:#34343A; --primary:#4073D4; --primary-fg:#FFFFFF;
+  --danger:#FF7A70; --overlay:#000000A6; --shadow:none; --shadow-lg:0 16px 48px #00000080;
+  --neutral:#A6A6AE; --neutral-bg:#FFFFFF12; --neutral-dot:#6B6B73;
+  --warning:#F5C451; --warning-bg:#F5C4511F; --warning-dot:#F5C451;
+  --accent:#8DB4FF; --accent-bg:#4D8BFF24; --accent-dot:#4D8BFF;
+  --info:#8DB4FF; --info-bg:#4D8BFF29; --info-dot:#4D8BFF;
+  --review:#FFB35C; --review-bg:#FF742624; --review-dot:#FF8A3D;
+  --success:#5BD68F; --success-bg:#41D97F24; --success-dot:#41D97F;
+  --dangert:#FF7A70; --danger-bg:#FF453A29; --danger-dot:#FF453A;
+  --critical:#D34247; --on-critical:#FFFFFF; color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:13.5px;line-height:20px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.i{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+.sub{color:var(--muted);font-size:13px}
+.h1{margin:0;font-size:26px;line-height:32px;font-weight:500;text-wrap:balance}
+.h2{margin:0;font-size:15px;line-height:20px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.between{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border-radius:9999px;border:0;font-weight:500;white-space:nowrap;background:transparent;text-decoration:none;transition:background .16s,opacity .16s}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-p{background:var(--primary);color:var(--primary-fg)}
+.btn-p:hover:not(:disabled){filter:brightness(1.08)}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--input)}
+.btn-s:hover:not(:disabled){background:var(--hover)}
+.btn-g{color:var(--muted)}
+.btn-g:hover:not(:disabled){background:var(--hover);color:var(--fg)}
+.btn-d{background:var(--danger);color:#FFFFFF}
+.btn-dg{color:var(--danger)}
+.btn-dg:hover{background:var(--danger-bg)}
+.btn-lg{height:40px;padding:0 18px}
+.btn-sm{height:28px;padding:0 12px;font-size:13px}
+.ico{width:30px;height:30px;padding:0;border-radius:8px;position:relative}
+.dash-btn{border-style:dashed;color:var(--muted)}
+.badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:9999px;background:var(--primary);color:var(--primary-fg);font-size:11px;line-height:16px;text-align:center;box-sizing:border-box}
+
+/* Campos */
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lbl{font-size:12px;line-height:16px;font-weight:500}
+.lbl .opt{font-weight:400;color:var(--muted)}
+.inp{height:32px;box-sizing:border-box;width:100%;border:1px solid var(--input);border-radius:10px;padding:0 12px;background:var(--card);color:var(--fg)}
+textarea.inp{height:auto;min-height:88px;padding:8px 12px;resize:vertical}
+.inp:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+.inp[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 14%,transparent)}
+.err{font-size:13px;color:var(--danger)}
+.ayuda{font-size:13px;color:var(--muted)}
+.search{position:relative;display:flex;align-items:center;flex:1 1 220px;max-width:320px}
+.search .i{position:absolute;left:10px;color:var(--muted)}
+.search .inp{padding-left:32px}
+.chk{display:inline-flex;align-items:center;gap:8px;min-height:28px}
+.chk input{width:16px;height:16px;accent-color:var(--primary)}
+
+/* Píldoras de tono */
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:9999px;font-size:12px;line-height:16px;font-weight:500;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;flex:none}
+.t-neutral{background:var(--neutral-bg);color:var(--neutral)} .t-neutral .dot{background:var(--neutral-dot)}
+.t-warning{background:var(--warning-bg);color:var(--warning)} .t-warning .dot{background:var(--warning-dot)}
+.t-accent{background:var(--accent-bg);color:var(--accent)} .t-accent .dot{background:var(--accent-dot)}
+.t-info{background:var(--info-bg);color:var(--info)} .t-info .dot{background:var(--info-dot)}
+.t-review{background:var(--review-bg);color:var(--review)} .t-review .dot{background:var(--review-dot)}
+.t-success{background:var(--success-bg);color:var(--success)} .t-success .dot{background:var(--success-dot)}
+.t-danger{background:var(--danger-bg);color:var(--dangert)} .t-danger .dot{background:var(--danger-dot)}
+.t-critical{background:var(--critical);color:var(--on-critical)} .t-critical .dot{background:var(--on-critical)}
+
+/* Tablas */
+.tabla-caja{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;min-width:640px}
+.tbl th{height:36px;padding:0 16px;text-align:left;font-size:12px;font-weight:500;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{height:44px;padding:0 16px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.clic{cursor:pointer}
+.tbl tr.clic:hover td{background:var(--soft)}
+.tbl tr.off td{color:var(--muted);background:var(--soft)}
+.link{background:none;border:0;padding:0;color:var(--fg);font-weight:500}
+.link:hover{color:var(--primary)}
+a.a,button.a{color:var(--primary);background:none;border:0;padding:0;font-weight:500;text-decoration:none}
+
+/* Login */
+.login{min-height:100%;box-sizing:border-box;padding:32px 16px;display:grid;place-items:center}
+.login-box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px}
+.login-card{padding:32px;display:flex;flex-direction:column;gap:20px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--primary);color:var(--primary-fg);display:flex;align-items:center;justify-content:center;font-weight:600}
+.alerta{display:flex;gap:8px;align-items:center;border-radius:10px;padding:8px 12px;font-size:13px}
+.alerta.mal{background:var(--danger-bg);color:var(--dangert)}
+.alerta.ok{background:var(--success-bg);color:var(--success)}
+.alerta.info{background:var(--accent-bg);color:var(--accent)}
+.demo{padding:16px;display:flex;flex-direction:column;gap:6px}
+.demo-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:10px;border:0;background:transparent;text-align:left;width:100%}
+.demo-row:hover{background:var(--hover)}
+
+/* Estructura */
+.app{display:flex;min-height:100%}
+.nav{flex:none;width:240px;box-sizing:border-box;border-right:1px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;gap:2px;background:var(--bg);position:sticky;top:0;height:100vh;overflow-y:auto}
+.marca{display:flex;align-items:center;gap:8px;padding:0 8px 16px;font-weight:600;font-size:15px}
+.marca .logo{width:28px;height:28px;border-radius:8px;font-size:12px}
+.item{display:flex;align-items:center;gap:10px;height:32px;padding:0 8px;border-radius:8px;color:var(--muted);background:none;border:0;width:100%;text-align:left}
+.item:hover{background:var(--hover);color:var(--fg)}
+.item.on{background:var(--hover);color:var(--fg);font-weight:500}
+.item.subi{padding-left:34px;font-size:13px}
+.item .cnt{margin-left:auto;font-size:12px;color:var(--muted)}
+.grupo{padding:12px 8px 4px;font-size:12px;color:var(--muted);font-weight:500}
+.nav-pie{margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:56px;box-sizing:border-box;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:var(--bg);z-index:20}
+.migas{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.migas b{color:var(--fg);font-weight:500}
+.yo{display:flex;align-items:center;gap:8px;font-size:13px;border:0;background:none;padding:4px 6px;border-radius:9999px}
+.yo:hover{background:var(--hover)}
+.av{width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none}
+.menu-yo{position:absolute;right:24px;top:52px;width:220px;padding:6px;display:flex;flex-direction:column;gap:2px;z-index:30;box-shadow:var(--shadow-lg)}
+.cont{padding:24px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:1280px}
+.btn-menu{display:none}
+.velo{display:none}
+
+/* Bloques */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{padding:14px 16px;display:flex;flex-direction:column;gap:4px;text-align:left;color:var(--fg)}
+button.kpi:hover{border-color:var(--input)}
+.num{font-size:26px;line-height:32px;font-weight:500;font-variant-numeric:tabular-nums}
+.cab{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dos{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+.tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.datos{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.datos dt{font-size:12px;line-height:16px;font-weight:500;color:var(--muted)}
+.datos dd{margin:0}
+.caja-gris{background:var(--soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.hist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
+.hist li{display:flex;gap:12px}
+.hist .eje{flex:none;display:flex;flex-direction:column;align-items:center}
+.hist .p{width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--neutral-dot)}
+.hist li:first-child .p{background:var(--primary)}
+.hist .l{flex:1;width:1px;background:var(--border);margin:4px 0}
+.hist li:last-child .l{display:none}
+.hist .c{display:flex;flex-direction:column;gap:2px;padding-bottom:16px;min-width:0}
+.barra{height:8px;background:var(--hover);border-radius:9999px;overflow:hidden}
+.barra>span{display:block;height:100%;border-radius:9999px}
+.barras{display:flex;flex-direction:column;gap:8px}
+.barras .fila{display:grid;grid-template-columns:120px minmax(0,1fr) 28px;align-items:center;gap:10px;font-size:13px}
+.barras .fila>span:first-child{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.barras .fila>span:last-child{text-align:right;font-weight:500;font-variant-numeric:tabular-nums}
+.vacio{padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.vacio .ic{width:40px;height:40px;border-radius:10px;background:var(--soft);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.pasos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.paso{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:10px;border:1px solid var(--input);background:var(--card);text-align:left;color:var(--fg)}
+.paso.hecho{background:var(--soft);border-color:var(--border)}
+.marca-paso{flex:none;width:18px;height:18px;margin-top:1px;border-radius:50%;border:1.5px solid var(--neutral-dot);box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.paso.hecho .marca-paso{background:var(--success-dot);border-color:var(--success-dot);color:#FFFFFF}
+.prog{height:6px;border-radius:9999px;background:var(--hover);overflow:hidden}
+.prog>span{display:block;height:100%;background:var(--primary)}
+.zona{border:1px dashed var(--input);border-radius:10px;background:var(--soft);padding:20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.adj{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:1px solid var(--border);border-radius:10px}
+.noti{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border:0;border-bottom:1px solid var(--line);background:none;width:100%;text-align:left;color:var(--fg)}
+.noti:last-child{border-bottom:0}
+.noti:hover{background:var(--soft)}
+.noti .p{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;background:transparent}
+.noti.nueva .p{background:var(--primary)}
+.noti.nueva .t{font-weight:500}
+.sw{position:relative;width:34px;height:20px;border-radius:9999px;border:0;background:var(--input);padding:0;flex:none;transition:background .16s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#FFFFFF;transition:transform .16s}
+.sw[aria-checked="true"]{background:var(--primary)}
+.sw[aria-checked="true"]::after{transform:translateX(14px)}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--sans)}
+.leyenda{display:flex;gap:14px;color:var(--muted);font-size:13px}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+
+/* Modal y avisos */
+.modal-velo{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:24px 16px;z-index:50;overflow-y:auto}
+.modal{width:100%;max-width:480px;background:var(--card);border-radius:24px;padding:24px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:16px;box-sizing:border-box;max-height:100%;overflow-y:auto}
+.modal.ancho{max-width:860px}
+.modal-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.modal-pie{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:9999px;font-weight:500;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);box-sizing:border-box}
+.clave{font-family:var(--mono);font-size:18px;padding:12px;border-radius:10px;background:var(--soft);text-align:center;letter-spacing:.04em;user-select:all}
+.aviso{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:70;width:min(560px,calc(100% - 32px));box-sizing:border-box;box-shadow:var(--shadow-lg);justify-content:space-between}
+.alerta.adv{background:var(--warning-bg);color:var(--warning)}
+.banda{display:flex;gap:8px;align-items:center;padding:8px 24px;font-size:13px;background:var(--warning-bg);color:var(--warning);border-bottom:1px solid var(--border)}
+.esq{background:var(--hover);border-radius:8px;animation:pulso 1.2s ease-in-out infinite}
+@keyframes pulso{50%{opacity:.5}}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border)}
+.tab{height:36px;padding:0 12px;border:0;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--primary)}
+.campana{position:absolute;right:72px;top:52px;width:340px;max-width:calc(100% - 32px);z-index:30;box-shadow:var(--shadow-lg);overflow:hidden}
+.sim{position:fixed;left:16px;bottom:16px;z-index:65}
+.sim-panel{position:absolute;left:0;bottom:40px;width:300px;padding:12px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-lg)}
+.sim-panel .btn{justify-content:flex-start}
+.cnt-txt{font-size:12px;color:var(--muted);align-self:flex-end}
+
+@media (max-width: 960px){
+  .dos,.tres{grid-template-columns:minmax(0,1fr)}
+  .pasos{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width: 860px){
+  .nav{position:fixed;left:0;top:0;bottom:0;z-index:45;transform:translateX(-100%);transition:transform .2s;background:var(--card);padding-left:max(10px,env(safe-area-inset-left,0px))}
+  .menu-on .nav{transform:none}
+  .menu-on .velo{display:block;position:fixed;inset:0;background:var(--overlay);z-index:44}
+  .btn-menu{display:inline-flex}
+  .top{padding:0 16px}
+  .cont{padding:16px}
+  .yo .nom{display:none}
+  .menu-yo{right:16px}
+  .campana{right:16px}
+  .banda{padding:8px 16px}
+}
+</style>
+
+<div id="app"></div>
+
+<script>
+(function () {
+'use strict';
+var KEY = 'servigest-prototipo-v2';
+var H = 36e5, DIA = 24 * H;
+
+/* ---------- Iconos (Lucide) ---------- */
+var I = {
+  inicio:'M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  sol:'M9 2h6v4H9zM16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01',
+  dash:'M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3',
+  carga:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  notif:'M10.3 21a1.94 1.94 0 0 0 3.4 0M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33',
+  admin:'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+  plus:'M12 5v14M5 12h14', buscar:'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM21 21l-4.3-4.3', x:'M18 6 6 18M6 6l12 12',
+  izq:'m15 18-6-6 6-6', der:'m9 18 6-6-6-6', alerta:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 8v4M12 16h.01',
+  reloj:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2', archivo:'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7zM14 2v5h6',
+  subir:'M12 3v12M7 8l5-5 5 5M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4',
+  lapiz:'M12 20h9M16.38 3.62a1 1 0 0 1 3 3L7.37 18.64a2 2 0 0 1-.85.5l-2.87.84a.5.5 0 0 1-.62-.62l.84-2.87a2 2 0 0 1 .5-.85z',
+  basura:'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+  check:'M20 6 9 17l-5-5', salir:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  persona:'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', menu:'M4 6h16M4 12h16M4 18h16',
+  reiniciar:'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5',
+  carpeta:'M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z'
+};
+function ic(n, s) { s = s || 16; return '<svg class="i" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" aria-hidden="true"><path d="' + I[n] + '"/></svg>'; }
+function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+/* ---------- Catálogos fijos ---------- */
+var ESTADOS = {
+  registrada: ['Registrada', 'warning'], aprobada: ['Aprobada', 'accent'], asignada: ['Asignada', 'accent'],
+  en_proceso: ['En proceso', 'info'], pendiente_info: ['Pendiente de información', 'review'],
+  resuelta: ['Resuelta', 'success'], cerrada: ['Cerrada', 'neutral'], cancelada: ['Cancelada', 'danger']
+};
+var TONO_PRIO = { critica: 'critical', alta: 'review', media: 'info', baja: 'neutral' };
+var ROL = { cliente: 'Cliente', tecnico: 'Técnico', coordinador: 'Coordinador', administrador: 'Administrador' };
+var ACTIVOS = ['asignada', 'en_proceso', 'pendiente_info'];
+var ABIERTOS = ['registrada', 'aprobada', 'asignada', 'en_proceso', 'pendiente_info'];
+// Copia de la tabla de transiciones de docs/tecnico/03-estados-y-reglas.md
+var TRANS = [
+  { de: 'registrada', a: 'aprobada', roles: ['coordinador'], btn: 'Aprobar', tipo: 'p' },
+  { de: 'registrada', a: 'cancelada', roles: ['coordinador', 'cliente'], btn: 'Cancelar solicitud', req: 'comentario', tipo: 'dg' },
+  { de: 'aprobada', a: 'cancelada', roles: ['coordinador', 'cliente'], btn: 'Cancelar solicitud', req: 'comentario', tipo: 'dg' },
+  { de: 'asignada', a: 'en_proceso', roles: ['tecnico'], btn: 'Iniciar atención', tipo: 'p' },
+  { de: 'en_proceso', a: 'pendiente_info', roles: ['tecnico'], btn: 'Pedir información', req: 'comentario', tipo: 's' },
+  { de: 'en_proceso', a: 'resuelta', roles: ['tecnico'], btn: 'Resolver', req: 'resolucion', tipo: 'p' },
+  { de: 'pendiente_info', a: 'en_proceso', roles: ['cliente', 'coordinador'], btn: 'Responder', req: 'comentario', tipo: 'p' },
+  { de: 'resuelta', a: 'cerrada', roles: ['coordinador'], btn: 'Cerrar', tipo: 'p' },
+  { de: 'resuelta', a: 'en_proceso', roles: ['coordinador'], btn: 'Rechazar resolución', req: 'comentario', tipo: 's' },
+  { de: 'cerrada', a: 'en_proceso', roles: ['coordinador', 'administrador'], btn: 'Reabrir', req: 'comentario', tipo: 's' }
+];
+// Mensaje en español de cada código de error de la API (docs/tecnico/04-api.md y docs/ux/08-errores-y-estados.md)
+var ERR = {
+  VALIDACION: 'Revisa los campos marcados.',
+  CREDENCIALES_INVALIDAS: 'Correo o contraseña incorrectos',
+  CAMBIO_PASSWORD_REQUERIDO: 'Debes cambiar tu contraseña temporal',
+  NO_AUTENTICADO: 'Tu sesión expiró. Vuelve a ingresar y seguirás donde estabas.',
+  SIN_PERMISO: 'No tienes acceso a esa sección. Te llevamos al inicio.',
+  NO_ENCONTRADO: 'No encontramos esta solicitud',
+  DUPLICADO: 'Ya existe un registro con ese dato.',
+  TRANSICION_INVALIDA: 'La solicitud cambió de estado mientras la veías. Revisa su estado actual.',
+  CONFLICTO_VERSION: 'Otra persona modificó esta solicitud. Recargamos sus datos; lo que escribiste sigue aquí. Vuelve a enviar.',
+  EN_USO: 'Tiene registros relacionados, por eso no se puede eliminar. Puedes desactivarlo.',
+  RESOLUCION_REQUERIDA: 'No se puede cerrar sin resolución documentada.',
+  TECNICO_SIN_ESPECIALIDAD: 'No se puede asignar: el técnico no tiene la especialidad de esta categoría.',
+  TECNICO_NO_DISPONIBLE: 'No se puede asignar: el técnico no está disponible.',
+  TECNICO_CARGA_MAXIMA: 'No se puede asignar: el técnico llegó a su carga máxima.',
+  JUSTIFICACION_REQUERIDA: 'La justificación es obligatoria al reasignar.',
+  CUENTA_INACTIVA: 'Tu cuenta está desactivada. Habla con el administrador.',
+  ENLACE_INVALIDO: 'El enlace no es válido o ya venció. Pide uno nuevo.',
+  ERROR_INTERNO: 'Algo falló de nuestro lado. No se guardó nada; lo que escribiste sigue aquí. Intenta de nuevo.',
+  SIN_CONEXION: 'Sin conexión. No se guardó nada; inténtalo cuando vuelvas a estar en línea.'
+};
+var MOTIVO = { USUARIO_INACTIVO: 'Usuario inactivo', TECNICO_SIN_ESPECIALIDAD: 'Sin la especialidad', TECNICO_NO_DISPONIBLE: 'No disponible', TECNICO_CARGA_MAXIMA: 'Carga al máximo', ES_ACTUAL: 'Es el técnico actual' };
+var LIM = { nombre: 120, correo: 160, equipo: 120, descripcion: 2000, texto: 1000, sede: 120, catalogo: 60 };
+
+/* ---------- Datos de ejemplo ---------- */
+function semilla() {
+  var ahora = Date.now();
+  var d = {
+    seq: { usuario: 20, tecnico: 10, sol: 126, noti: 1 },
+    prioridades: [{ id: 'critica', n: 'Crítica', horas: 4 }, { id: 'alta', n: 'Alta', horas: 8 }, { id: 'media', n: 'Media', horas: 24 }, { id: 'baja', n: 'Baja', horas: 72 }],
+    especialidades: [{ n: 'Redes', activo: true }, { n: 'Climatización', activo: true }, { n: 'Eléctrico', activo: true }, { n: 'Cómputo', activo: true }],
+    // Cada categoría exige una especialidad (02-modelo-datos.md): la asignación valida esa especialidad
+    categorias: [{ n: 'Redes', esp: 'Redes', activo: true }, { n: 'Cableado estructurado', esp: 'Redes', activo: true }, { n: 'Climatización', esp: 'Climatización', activo: true }, { n: 'Eléctrico', esp: 'Eléctrico', activo: true }, { n: 'Cómputo', esp: 'Cómputo', activo: true }],
+    clientes: [
+      { id: 'c1', n: 'Comercial Andina S.A.', ruc: '0991234567001', activo: true, sedes: ['Matriz — Av. 9 de Octubre', 'Bodega Norte'] },
+      { id: 'c2', n: 'Hotel Malecón', ruc: '0992345678001', activo: true, sedes: ['Edificio principal'] },
+      { id: 'c3', n: 'Clínica del Río', ruc: '0993456789001', activo: true, sedes: ['Torre A', 'Torre B'] },
+      { id: 'c4', n: 'Ferretería El Puerto', ruc: '0994567890001', activo: false, sedes: ['Local centro'] }
+    ],
+    usuarios: [
+      { id: 'u1', nombre: 'Rosa Vega', correo: 'rosa.vega@servigest.ec', rol: 'administrador' },
+      { id: 'u2', nombre: 'María León', correo: 'maria.leon@servigest.ec', rol: 'coordinador' },
+      { id: 'u3', nombre: 'Juan Pérez', correo: 'juan.perez@servigest.ec', rol: 'tecnico', tecnicoId: 't1' },
+      { id: 'u4', nombre: 'Luis Mora', correo: 'luis.mora@servigest.ec', rol: 'tecnico', tecnicoId: 't2' },
+      { id: 'u5', nombre: 'Carla Vera', correo: 'carla.vera@servigest.ec', rol: 'tecnico', tecnicoId: 't3' },
+      { id: 'u6', nombre: 'Pedro Ruiz', correo: 'pedro.ruiz@servigest.ec', rol: 'tecnico', tecnicoId: 't4' },
+      { id: 'u7', nombre: 'Sofía Lara', correo: 'sofia.lara@servigest.ec', rol: 'tecnico', tecnicoId: 't5' },
+      { id: 'u8', nombre: 'Ana Torres', correo: 'ana.torres@andina.ec', rol: 'cliente', clienteId: 'c1' },
+      { id: 'u9', nombre: 'Pablo Ríos', correo: 'pablo.rios@malecon.ec', rol: 'cliente', clienteId: 'c2', activo: false },
+      { id: 'u10', nombre: 'Lucía Ortiz', correo: 'lucia.ortiz@malecon.ec', rol: 'cliente', clienteId: 'c2', debeCambiar: true, pass: 'Temporal1', nuevo: true },
+      { id: 'u11', nombre: 'Jorge Salas', correo: 'jorge.salas@clinicadelrio.ec', rol: 'cliente', clienteId: 'c3' },
+      { id: 'u12', nombre: 'Diego Paz', correo: 'diego.paz@servigest.ec', rol: 'tecnico', tecnicoId: 't6', debeCambiar: true, pass: 'Temporal1', nuevo: true },
+      { id: 'u13', nombre: 'Elena Ríos', correo: 'elena.rios@servigest.ec', rol: 'coordinador', debeCambiar: true, pass: 'Temporal1', nuevo: true },
+      { id: 'u14', nombre: 'Marco Silva', correo: 'marco.silva@servigest.ec', rol: 'administrador', debeCambiar: true, pass: 'Temporal1', nuevo: true },
+      { id: 'u15', nombre: 'Rita Cano', correo: 'rita.cano@elpuerto.ec', rol: 'cliente', clienteId: 'c4' }
+    ],
+    tecnicos: [
+      { id: 't1', usuarioId: 'u3', esp: ['Redes', 'Cómputo'], disponible: true, max: 5 },
+      { id: 't2', usuarioId: 'u4', esp: ['Climatización', 'Eléctrico'], disponible: true, max: 5 },
+      { id: 't3', usuarioId: 'u5', esp: ['Climatización', 'Cómputo'], disponible: true, max: 5 },
+      { id: 't4', usuarioId: 'u6', esp: ['Climatización'], disponible: true, max: 2 },
+      { id: 't5', usuarioId: 'u7', esp: ['Climatización', 'Cómputo'], disponible: false, max: 5 },
+      { id: 't6', usuarioId: 'u12', esp: ['Redes'], disponible: true, max: 5 }
+    ],
+    token: null,
+    solicitudes: [], notificaciones: []
+  };
+  d.usuarios.forEach(function (u) { if (u.activo === undefined) u.activo = true; if (!u.pass) u.pass = 'demo1234'; u.hechos = {}; u.telefono = u.nuevo ? '' : '0991234567'; });
+  var horas = { critica: 4, alta: 8, media: 24, baja: 72 };
+  var CAMINO = {
+    registrada: ['registrada'], aprobada: ['registrada', 'aprobada'], asignada: ['registrada', 'aprobada', 'asignada'],
+    en_proceso: ['registrada', 'aprobada', 'asignada', 'en_proceso'],
+    pendiente_info: ['registrada', 'aprobada', 'asignada', 'en_proceso', 'pendiente_info'],
+    resuelta: ['registrada', 'aprobada', 'asignada', 'en_proceso', 'resuelta'],
+    cerrada: ['registrada', 'aprobada', 'asignada', 'en_proceso', 'resuelta', 'cerrada'],
+    cancelada: ['registrada', 'cancelada']
+  };
+  var clienteUsuario = { c1: 'u8', c2: 'u9', c3: 'u11', c4: 'u15' };
+  function s(num, cli, sede, cat, pr, equipo, desc, estado, tid, horasAtras, horasResol, resolucion) {
+    var creada = ahora - horasAtras * H;
+    var sol = {
+      id: 's' + num, codigo: 'SOL-2026-000' + num, clienteId: cli, sede: d.clientes.find(function (c) { return c.id === cli; }).sedes[sede],
+      categoria: cat, prioridad: pr, equipo: equipo, descripcion: desc, estado: estado, tecnicoId: tid || null,
+      creada: creada, limite: creada + horas[pr] * H, resueltaEn: horasResol ? creada + horasResol * H : null,
+      resolucion: resolucion || '', adjuntos: num === 123 ? [{ n: 'foto-rack.jpg', t: '1,2 MB' }] : [], creadoPor: clienteUsuario[cli], historial: []
+    };
+    var pasos = CAMINO[estado], fin = sol.resueltaEn ? Math.min(ahora, sol.resueltaEn + (estado === 'cerrada' ? 2 * H : 0)) : ahora - 0.2 * H;
+    var tecU = tid ? d.tecnicos.find(function (t) { return t.id === tid; }).usuarioId : null;
+    var tecN = tecU ? d.usuarios.find(function (u) { return u.id === tecU; }).nombre : '';
+    pasos.forEach(function (e, i) {
+      var cuando = creada + (fin - creada) * (i / Math.max(pasos.length - 1, 1)) * 0.95;
+      var quien = { registrada: sol.creadoPor, aprobada: 'u2', asignada: 'u2', en_proceso: tecU, pendiente_info: tecU, resuelta: tecU, cerrada: 'u2', cancelada: sol.creadoPor }[e];
+      var nota = { asignada: 'Asignada a ' + tecN, pendiente_info: 'Necesito una foto de la etiqueta del equipo.', resuelta: resolucion, cancelada: 'Ya no es necesario: lo resolvió el proveedor.' }[e] || '';
+      sol.historial.unshift({ de: i ? pasos[i - 1] : null, a: e, quien: quien, cuando: cuando, nota: nota });
+    });
+    d.solicitudes.push(sol);
+  }
+  s(101, 'c1', 0, 'Eléctrico', 'media', 'Tablero principal', 'El breaker del tablero se dispara al encender el aire acondicionado.', 'cerrada', 't2', 480, 10, 'Se cambió el breaker de 32 A por uno de 40 A y se balancearon las cargas.');
+  s(104, 'c3', 0, 'Redes', 'alta', 'Access point sala de espera', 'Wifi intermitente en la sala de espera.', 'cerrada', 't1', 360, 11, 'Se reubicó el access point y se cambió el canal a 36.');
+  s(107, 'c2', 0, 'Climatización', 'media', 'Split habitación 304', 'No enfría y gotea agua sobre la cama.', 'cerrada', 't3', 216, 20, 'Limpieza de drenaje y recarga de gas R410A.');
+  s(110, 'c1', 0, 'Eléctrico', 'media', 'UPS recepción', 'La UPS pita cada cinco minutos.', 'resuelta', 't3', 48, 18, 'Se reemplazó la batería interna de la UPS.');
+  s(112, 'c2', 0, 'Cómputo', 'baja', 'Impresora recepción', 'Atasca el papel en cada impresión.', 'cancelada', null, 96);
+  s(115, 'c3', 1, 'Redes', 'alta', 'Switch piso 1', 'Cuatro puertos sin enlace en el piso 1.', 'resuelta', 't1', 30, 6, 'Se reemplazó el módulo de puertos 9–16.');
+  s(117, 'c2', 0, 'Climatización', 'media', 'Aire del restaurante', 'El aire del restaurante se apaga solo.', 'en_proceso', 't4', 10);
+  s(118, 'c1', 0, 'Climatización', 'media', 'Aire sala de reuniones', 'Hace ruido y no enfría.', 'en_proceso', 't2', 6);
+  s(119, 'c3', 0, 'Eléctrico', 'alta', 'Iluminación pasillo', 'Las lámparas del pasillo parpadean.', 'asignada', 't2', 3);
+  s(120, 'c2', 0, 'Cómputo', 'baja', 'PC caja 2', 'La computadora de la caja 2 no enciende.', 'pendiente_info', 't3', 22);
+  s(121, 'c3', 1, 'Eléctrico', 'alta', 'Tomacorrientes quirófano 2', 'Sin energía en dos tomacorrientes del quirófano 2.', 'en_proceso', 't2', 9);
+  s(122, 'c2', 0, 'Climatización', 'alta', 'Chiller', 'Temperatura alta en el lobby.', 'asignada', 't4', 2);
+  s(123, 'c1', 0, 'Redes', 'alta', 'Switch piso 2', 'Sin conectividad en el piso 2 desde las 08:00. Afecta a 12 puestos de trabajo.', 'asignada', 't1', 6.5);
+  s(124, 'c2', 0, 'Climatización', 'media', 'Split habitación 210', 'El equipo no enciende.', 'aprobada', null, 4);
+  s(125, 'c1', 1, 'Redes', 'critica', 'Router principal', 'Sin internet en toda la bodega.', 'registrada', null, 3.4);
+  s(126, 'c3', 0, 'Cómputo', 'media', 'Servidor de historia clínica', 'Lentitud al abrir las fichas de pacientes.', 'registrada', null, 1);
+  s(102, 'c4', 0, 'Eléctrico', 'baja', 'Letrero luminoso', 'El letrero de la entrada no enciende.', 'cerrada', 't2', 900, 30, 'Se cambió el transformador del letrero.');
+  function n(uid, texto, sid, horasAtras, leida) { d.notificaciones.push({ id: 'n' + d.seq.noti++, uid: uid, texto: texto, sid: sid, cuando: ahora - horasAtras * H, leida: !!leida }); }
+  n('u2', 'Nueva solicitud SOL-2026-000126 de Clínica del Río', 's126', 1);
+  n('u2', 'Nueva solicitud SOL-2026-000125 de Comercial Andina S.A.', 's125', 3.4);
+  n('u2', 'SOL-2026-000115 fue resuelta por Juan Pérez', 's115', 24, true);
+  n('u3', 'Se te asignó SOL-2026-000123', 's123', 5);
+  n('u8', 'SOL-2026-000123 fue asignada a Juan Pérez', 's123', 5);
+  n('u8', 'SOL-2026-000110 fue resuelta', 's110', 30, true);
+  n('u5', 'Respuesta pendiente del cliente en SOL-2026-000120', 's120', 20, true);
+  n('u1', 'SOL-2026-000121 venció su plazo', 's121', 1);
+  return d;
+}
+
+/* ---------- Estado ---------- */
+var db, st = { uid: null, vista: 'inicio', pub: 'login', solId: null, filtros: limpio(), pagina: 1, modal: null, toast: null, err: {}, borrador: null, menu: false, menuYo: false, campana: false, adm: { q: '', rol: '', activo: '' }, dash: { cat: '', tec: '', cli: '', periodo: '30' }, catTab: 'especialidades', banner: null, guardando: false, cargando: false, errorCarga: false, volver: null, sim: { abierto: false, lento: false, offline: false, fallo: false, conflicto: false, falloCarga: false } };
+function limpio() { return { q: '', estado: '', prioridad: '', categoria: '', plazo: '', desde: '', hasta: '' }; }
+function cargar() {
+  try { var t = localStorage.getItem(KEY); if (t) { db = JSON.parse(t); ultimo = t; st.uid = localStorage.getItem(KEY + '-uid') || null; return; } } catch (e) { /* sin almacenamiento: se usa la semilla */ }
+  db = semilla();
+}
+var ultimo = '';
+function aviso(t, tono) { st.banner = { t: t, tono: tono || 'mal' }; }
+function catDe(n) { return db.categorias.find(function (c) { return c.n === n; }); }
+function espDe(n) { var c = catDe(n); return c ? c.esp : n; }
+function existeCorreo(correo, salvo) { return db.usuarios.some(function (y) { return y.correo === correo && y !== salvo; }); }
+// Misma regla de contraseña en primer acceso, restablecer y perfil
+function reglaClave(p1, p2, anterior) {
+  if (p1.length < 8 || !/[a-zA-Z]/.test(p1) || !/\d/.test(p1)) return { p1: 'Debe tener mínimo 8 caracteres, con una letra y un número.' };
+  if (anterior && p1 === anterior) return { p1: 'Usa una contraseña distinta a la anterior.' };
+  if (p1 !== p2) return { p2: 'Las contraseñas no coinciden' };
+  return null;
+}
+function guardar() { try { var t = JSON.stringify(db); if (t !== ultimo) { ultimo = t; localStorage.setItem(KEY, t); } localStorage.setItem(KEY + '-uid', st.uid || ''); } catch (e) { /* sin almacenamiento: los cambios duran hasta recargar */ } }
+
+/* ---------- Consultas ---------- */
+function por(lista, id) { return lista.find(function (x) { return x.id === id; }); }
+function yo() { return por(db.usuarios, st.uid); }
+function usr(id) { return por(db.usuarios, id); }
+function cli(id) { return por(db.clientes, id); }
+function tec(id) { return por(db.tecnicos, id); }
+function prio(id) { return por(db.prioridades, id); }
+function nomTec(id) { return id ? usr(tec(id).usuarioId).nombre : 'Sin asignar'; }
+function carga(tid) { return db.solicitudes.filter(function (s) { return s.tecnicoId === tid && ACTIVOS.indexOf(s.estado) >= 0; }).length; }
+function visibles(u) {
+  return db.solicitudes.filter(function (s) {
+    if (u.rol === 'cliente') return s.clienteId === u.clienteId;
+    if (u.rol === 'tecnico') return s.tecnicoId === u.tecnicoId;
+    return true;
+  }).sort(function (a, b) { return b.creada - a.creada; });
+}
+function iniciales(n) { return n.split(' ').map(function (p) { return p[0]; }).slice(0, 2).join('').toUpperCase(); }
+function dur(ms) { var h = ms / H; if (h < 1) return Math.max(1, Math.round(ms / 6e4)) + ' min'; if (h < 48) return Math.round(h) + ' h'; return Math.round(h / 24) + ' días'; }
+function fecha(t) { return new Date(t).toLocaleString('es-EC', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+function hace(t) { var m = Date.now() - t; return m < 6e4 ? 'ahora' : 'hace ' + dur(m); }
+// En la app real esto lo calcula el servidor (services/sla.js); aquí replica la misma regla.
+function plazo(s) {
+  if (s.estado === 'cancelada') return { t: '—', tono: 'neutral', k: '' };
+  if (s.estado === 'resuelta' || s.estado === 'cerrada') return s.resueltaEn <= s.limite ? { t: 'Cumplida', tono: 'neutral', k: 'cumplida' } : { t: 'Incumplida', tono: 'danger', k: 'incumplida' };
+  var r = s.limite - Date.now(), total = s.limite - s.creada;
+  if (r < 0) return { t: 'Vencida hace ' + dur(-r), tono: 'danger', k: 'vencida' };
+  if (r < total * 0.2) return { t: 'Vence en ' + dur(r), tono: 'warning', k: 'por_vencer' };
+  return { t: 'Vence en ' + dur(r), tono: 'success', k: 'a_tiempo' };
+}
+function pill(txt, tono, punto) { return '<span class="pill t-' + tono + '">' + (punto === false ? '' : '<span class="dot"></span>') + esc(txt) + '</span>'; }
+function pEstado(e) { return pill(ESTADOS[e][0], ESTADOS[e][1]); }
+function pPrio(p) { return pill(prio(p).n, TONO_PRIO[p]); }
+function pPlazo(s) { var p = plazo(s); return p.k ? pill(p.t, p.tono, false) : '<span class="muted">—</span>'; }
+function noLeidas(u) { return db.notificaciones.filter(function (n) { return n.uid === u.id && !n.leida; }).length; }
+
+/* ---------- Reglas (en la app real viven en el backend) ---------- */
+function puede(t, s, u) {
+  if (t.de !== s.estado || t.roles.indexOf(u.rol) < 0) return false;
+  if (u.rol === 'cliente') return s.clienteId === u.clienteId;
+  if (u.rol === 'tecnico') return s.tecnicoId === u.tecnicoId;
+  return true;
+}
+function notificar(uids, texto, sid) {
+  var u = yo();
+  uids.filter(function (id, i) { return id && id !== u.id && uids.indexOf(id) === i; }).forEach(function (id) {
+    db.notificaciones.push({ id: 'n' + db.seq.noti++, uid: id, texto: texto, sid: sid, cuando: Date.now(), leida: false });
+  });
+}
+function usuariosCliente(cid) { return db.usuarios.filter(function (u) { return u.clienteId === cid && u.activo; }).map(function (u) { return u.id; }); }
+function coordinadores() { return db.usuarios.filter(function (u) { return u.rol === 'coordinador' && u.activo; }).map(function (u) { return u.id; }); }
+function usuarioTec(tid) { return tid ? tec(tid).usuarioId : null; }
+function cambiarEstado(s, t, texto) {
+  var u = yo(), de = s.estado;
+  if (t.a === 'cerrada' && !s.resolucion) return ERR.RESOLUCION_REQUERIDA;
+  if (t.req === 'resolucion') { s.resolucion = texto; s.resueltaEn = Date.now(); }
+  if (t.a === 'en_proceso' && (de === 'resuelta' || de === 'cerrada')) { s.resueltaEn = null; s.resolucion = ''; }
+  s.estado = t.a;
+  s.historial.unshift({ de: de, a: t.a, quien: u.id, cuando: Date.now(), nota: t.req ? texto : '' });
+  var c = s.codigo, cl = usuariosCliente(s.clienteId), tu = usuarioTec(s.tecnicoId);
+  if (t.a === 'aprobada') notificar(cl, c + ' fue aprobada', s.id);
+  if (t.a === 'cancelada') notificar(cl, c + ' fue cancelada', s.id);
+  if (t.a === 'pendiente_info') notificar(cl, 'El técnico pide información en ' + c, s.id);
+  if (de === 'pendiente_info') notificar([tu], 'El cliente respondió en ' + c, s.id);
+  if (t.a === 'resuelta') notificar(cl.concat(coordinadores()), c + ' fue resuelta', s.id);
+  if (t.a === 'cerrada') notificar(cl.concat([tu]), c + ' fue cerrada', s.id);
+  if (de === 'cerrada') notificar(cl.concat([tu]), c + ' fue reabierta', s.id);
+  if (de === 'resuelta' && t.a === 'en_proceso') notificar([tu], 'Se rechazó la resolución de ' + c, s.id);
+  return null;
+}
+// Devuelve el código del primer motivo por el que el técnico no sirve, en el orden de 03-estados-y-reglas.md
+function motivoNoApto(s, t) {
+  if (!usr(t.usuarioId).activo) return 'USUARIO_INACTIVO';
+  if (t.esp.indexOf(espDe(s.categoria)) < 0) return 'TECNICO_SIN_ESPECIALIDAD';
+  if (!t.disponible) return 'TECNICO_NO_DISPONIBLE';
+  if (carga(t.id) >= t.max) return 'TECNICO_CARGA_MAXIMA';
+  if (t.id === s.tecnicoId) return 'ES_ACTUAL';
+  return '';
+}
+function asignar(s, tid, just) {
+  var reasigna = s.estado !== 'aprobada';
+  if (!tid) return { campo: 'tecnico', msg: 'Elige un técnico.' };
+  var m = motivoNoApto(s, tec(tid));
+  if (m) return { campo: 'tecnico', msg: ERR[m] || 'No se puede asignar: ' + MOTIVO[m].toLowerCase() + '.' };
+  if (reasigna && !just.trim()) return { campo: 'just', msg: ERR.JUSTIFICACION_REQUERIDA };
+  var anterior = s.tecnicoId, de = s.estado;
+  s.tecnicoId = tid;
+  if (!reasigna) s.estado = 'asignada';
+  s.historial.unshift({ de: de, a: s.estado, quien: yo().id, cuando: Date.now(), nota: (reasigna ? 'Reasignada de ' + nomTec(anterior) + ' a ' : 'Asignada a ') + nomTec(tid) + (just.trim() ? ' · ' + just.trim() : '') });
+  notificar([usuarioTec(tid)], 'Se te asignó ' + s.codigo, s.id);
+  if (anterior) notificar([usuarioTec(anterior)], s.codigo + ' fue reasignada a ' + nomTec(tid), s.id);
+  notificar(usuariosCliente(s.clienteId), s.codigo + ' fue asignada a ' + nomTec(tid), s.id);
+  return null;
+}
+
+/* ---------- Navegación ---------- */
+function menuDe(u) {
+  var m = [['inicio', 'Inicio', 'inicio']];
+  if (u.rol === 'cliente') m.push(['solicitudes', 'Mis solicitudes', 'sol']);
+  else if (u.rol === 'tecnico') m.push(['solicitudes', 'Mis asignadas', 'sol']);
+  else { m.push(['solicitudes', 'Solicitudes', 'sol'], ['dashboard', 'Dashboard', 'dash'], ['carga', 'Carga de técnicos', 'carga']); }
+  m.push(['notificaciones', 'Notificaciones', 'notif']);
+  return m;
+}
+var ADMIN = [['usuarios', 'Usuarios'], ['clientes', 'Clientes y sedes'], ['tecnicos', 'Técnicos'], ['catalogos', 'Catálogos']];
+function permitida(u, v) {
+  if (ADMIN.some(function (x) { return x[0] === v; })) return u.rol === 'administrador';
+  if (v === 'nueva') return u.rol === 'cliente' || u.rol === 'coordinador';
+  if (v === 'detalle') return !!st.solId;
+  if (v === 'perfil') return true;
+  return menuDe(u).some(function (x) { return x[0] === v; });
+}
+function sucio(b) { return !!b && !!(b.categoria || b.equipo.trim() || b.descripcion.trim() || b.adjuntos.length); }
+function ir(v, extra) {
+  var u = yo();
+  if (!u) return render(); // sin sesión solo existen las pantallas públicas
+  // Salir de Nueva solicitud con datos escritos pide confirmación
+  if (st.vista === 'nueva' && v !== 'nueva' && sucio(st.borrador) && !(extra && extra.forzar)) return abrirModal({ tipo: 'descartar', v: v, extra: extra || null });
+  // extra va antes del permiso: detalle se permite según el solId que llega aquí
+  if (extra) Object.keys(extra).forEach(function (k) { if (k !== 'forzar') st[k] = extra[k]; });
+  if (!permitida(u, v)) { v = 'inicio'; aviso(ERR.SIN_PERMISO, 'adv'); } else st.banner = null;
+  st.vista = v; st.menu = false; st.menuYo = false; st.campana = false; st.err = {};
+  if (v === 'solicitudes') { st.pagina = 1; u.hechos.vioLista = true; }
+  if (v === 'carga') u.hechos.vioCarga = true;
+  ['catalogos', 'usuarios', 'clientes', 'tecnicos'].forEach(function (x) { if (v === x) u.hechos['vio' + x] = true; });
+  if (v === 'detalle') u.hechos.vioDetalle = true;
+  if (v === 'nueva') st.borrador = null;
+  // Simulación: un fallo de carga de una sola vez, o carga lenta con esqueletos
+  if (st.sim.falloCarga) { st.sim.falloCarga = false; st.errorCarga = true; } else st.errorCarga = false;
+  if (st.sim.lento) { st.cargando = true; setTimeout(function () { st.cargando = false; render(); }, 1200); }
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Vistas ---------- */
+function cabAcceso(titulo, texto) { return '<div class="stack" style="gap:6px"><span class="logo">SG</span><h1 class="h2" style="font-size:18px;line-height:24px;margin-top:10px">' + titulo + '</h1><p class="muted" style="margin:0">' + texto + '</p></div>'; }
+function alertaLogin() { var e = st.err; return e.login ? '<div class="alerta mal" role="alert">' + ic('alerta') + esc(e.login) + '</div>' : st.loginOk ? '<div class="alerta ok" role="status">' + ic('check') + esc(st.loginOk) + '</div>' : ''; }
+function vLogin() {
+  function fila(u, etq, nota, tono) { return '<button type="button" class="demo-row" data-a="rellenar" data-correo="' + esc(u.correo) + '" data-pass="' + esc(u.pass) + '"><span><b style="font-weight:500">' + esc(u.nombre) + '</b><br><span class="sub">' + esc(nota) + '</span></span>' + pill(etq, tono, false) + '</button>'; }
+  var cuentas = [['u8', 'Cliente'], ['u2', 'Coordinador'], ['u3', 'Técnico'], ['u1', 'Administrador']].map(function (c) { var u = usr(c[0]); return u ? fila(u, c[1], u.correo, 'neutral') : ''; }).join('');
+  var nuevos = [['u10', 'Cliente'], ['u12', 'Técnico'], ['u13', 'Coordinador'], ['u14', 'Administrador']].map(function (c) { var u = usr(c[0]); return u && u.debeCambiar ? fila(u, c[1], 'Contraseña temporal ' + u.pass, 'accent') : ''; }).join('');
+  return '<main class="login"><div class="login-box">' +
+    '<form class="card login-card" data-form="login" novalidate>' +
+      cabAcceso('Ingresar a ServiGest', 'Usa el correo y la contraseña que te entregó el administrador.') + alertaLogin() +
+      '<div class="field"><label class="lbl" for="l-correo">Correo</label><input class="inp" id="l-correo" type="email" autocomplete="username" maxlength="' + LIM.correo + '" placeholder="nombre@empresa.com" value="' + esc(st.loginCorreo || '') + '"></div>' +
+      '<div class="field"><label class="lbl" for="l-pass">Contraseña</label><input class="inp" id="l-pass" type="password" autocomplete="current-password" value="' + esc(st.loginPass || '') + '"></div>' +
+      '<button class="btn btn-p btn-lg" type="submit">Ingresar</button>' +
+      '<button type="button" class="a" style="align-self:center;font-size:13px" data-a="pub" data-v="recuperar">Olvidé mi contraseña</button>' +
+    '</form>' +
+    '<section class="card demo" aria-label="Cuentas de prueba"><span class="lbl muted">Cuentas de prueba · contraseña demo1234</span>' + cuentas +
+      (nuevos ? '<span class="lbl muted" style="margin-top:8px">Primer acceso · una por rol</span>' + nuevos : '') +
+      '<button type="button" class="btn btn-g btn-sm" style="align-self:flex-start;margin-top:4px" data-a="reiniciar">' + ic('reiniciar', 14) + 'Reiniciar datos de prueba</button>' +
+    '</section></div></main>';
+}
+function vRecuperar() {
+  var e = st.err, t = db.token;
+  if (st.recEnviado) {
+    return '<main class="login"><div class="login-box"><div class="card login-card">' + cabAcceso('Revisa tu correo', 'Si el correo está registrado, te enviamos un enlace para crear una contraseña nueva. Vence en 30 minutos y sirve una sola vez.') +
+      '<div class="caja-gris"><span class="lbl muted">Solo en esta demo</span>' + (t && !t.usado ? '<span class="sub">El enlace llegaría al correo. Ábrelo desde aquí:</span><div class="row"><button type="button" class="btn btn-s btn-sm" data-a="pub" data-v="restablecer">Abrir el enlace</button><button type="button" class="btn btn-g btn-sm" data-a="enlaceVencido">Probar enlace vencido</button></div>' : '<span class="sub">Ese correo no existe, así que no se generó enlace. La pantalla dice lo mismo para no revelar qué correos existen.</span>') + '</div>' +
+      '<button type="button" class="btn btn-s btn-lg" data-a="pub" data-v="login">Volver a ingresar</button></div></div></main>';
+  }
+  return '<main class="login"><div class="login-box"><form class="card login-card" data-form="recuperar" novalidate>' + cabAcceso('Recuperar contraseña', 'Escribe tu correo y te enviaremos un enlace para crear una nueva.') +
+    '<div class="field"><label class="lbl" for="r-correo">Correo</label><input class="inp" id="r-correo" type="email" autocomplete="username" maxlength="' + LIM.correo + '" placeholder="nombre@empresa.com"' + (e.correo ? ' aria-invalid="true" aria-describedby="r-correo-e"' : '') + '>' + (e.correo ? '<span class="err" id="r-correo-e">' + esc(e.correo) + '</span>' : '') + '</div>' +
+    '<button class="btn btn-p btn-lg" type="submit">Enviar enlace</button><button type="button" class="btn btn-g btn-sm" style="align-self:center" data-a="pub" data-v="login">Volver a ingresar</button></form></div></main>';
+}
+function tokenValido() { var t = db.token; return t && !t.usado && t.vence > Date.now() && usr(t.uid); }
+function vRestablecer() {
+  if (!tokenValido()) {
+    return '<main class="login"><div class="login-box"><div class="card login-card">' + cabAcceso('Enlace inválido o vencido', 'Los enlaces vencen a los 30 minutos y sirven una sola vez. Pide uno nuevo.') +
+      '<button type="button" class="btn btn-p btn-lg" data-a="pub" data-v="recuperar">Pedir un enlace nuevo</button><button type="button" class="btn btn-g btn-sm" style="align-self:center" data-a="pub" data-v="login">Volver a ingresar</button></div></div></main>';
+  }
+  return '<main class="login"><div class="login-box"><form class="card login-card" data-form="restablecer" novalidate>' + cabAcceso('Crea una contraseña nueva', 'Para ' + esc(usr(db.token.uid).correo) + '.') + camposClave() +
+    '<button class="btn btn-p btn-lg" type="submit">Guardar contraseña</button></form></div></main>';
+}
+function camposClave() {
+  var e = st.err;
+  return '<div class="field"><label class="lbl" for="p1">Nueva contraseña</label><input class="inp" id="p1" type="password" autocomplete="new-password"' + (e.p1 ? ' aria-invalid="true" aria-describedby="p1-e"' : '') + '><span class="' + (e.p1 ? 'err' : 'ayuda') + '" id="p1-e">' + esc(e.p1 || 'Mínimo 8 caracteres, con una letra y un número.') + '</span></div>' +
+    '<div class="field"><label class="lbl" for="p2">Confirmar contraseña</label><input class="inp" id="p2" type="password" autocomplete="new-password"' + (e.p2 ? ' aria-invalid="true" aria-describedby="p2-e"' : '') + '>' + (e.p2 ? '<span class="err" id="p2-e">' + esc(e.p2) + '</span>' : '') + '</div>';
+}
+var QUE_HACE = { cliente: 'Registrarás solicitudes de servicio técnico y seguirás su estado.', tecnico: 'Atenderás las solicitudes que te asignen y registrarás su resolución.', coordinador: 'Aprobarás solicitudes, asignarás técnicos y vigilarás los plazos.', administrador: 'Configurarás el sistema y verás los indicadores.' };
+function vPrimerAcceso(u) {
+  var pr = u.nombre.split(' ')[0];
+  return '<main class="login"><div class="login-box"><form class="card login-card" data-form="primer" novalidate>' +
+    cabAcceso('Hola, ' + esc(pr) + '. Entras como ' + ROL[u.rol].toLowerCase() + '.', QUE_HACE[u.rol] + ' Primero, cambia la contraseña temporal que te dio el administrador.') + camposClave() +
+    '<button class="btn btn-p btn-lg" type="submit">Guardar y entrar</button>' +
+    '<button type="button" class="btn btn-g btn-sm" style="align-self:center" data-a="salir">Salir</button>' +
+    '</form></div></main>';
+}
+function shell(u, titulo, cuerpo) {
+  var items = menuDe(u).map(function (m) {
+    var n = m[0] === 'notificaciones' ? noLeidas(u) : 0;
+    return '<button type="button" class="item' + (st.vista === m[0] ? ' on' : '') + '" data-a="ir" data-v="' + m[0] + '"' + (st.vista === m[0] ? ' aria-current="page"' : '') + '>' + ic(m[2]) + m[1] + (n ? '<span class="cnt">' + n + '</span>' : '') + '</button>';
+  }).join('');
+  if (u.rol === 'administrador') {
+    items += '<div class="grupo">Administración</div>' +
+      ADMIN.map(function (x) { return '<button type="button" class="item subi' + (st.vista === x[0] ? ' on' : '') + '" data-a="ir" data-v="' + x[0] + '"' + (st.vista === x[0] ? ' aria-current="page"' : '') + '>' + x[1] + '</button>'; }).join('');
+  }
+  var n = noLeidas(u);
+  var ultimas = db.notificaciones.filter(function (x) { return x.uid === u.id; }).sort(function (a, b) { return b.cuando - a.cuando; }).slice(0, 5);
+  var campana = st.campana ? '<div class="card campana" role="dialog" aria-label="Últimas notificaciones"><div class="cab"><h2 class="h2">Notificaciones</h2>' + (n ? '<button type="button" class="a" style="font-size:13px" data-a="leerTodas">Marcar todas como leídas</button>' : '') + '</div>' +
+    (ultimas.length ? ultimas.map(filaNoti).join('') : vacio('notif', 'No tienes notificaciones', 'Aquí verás los cambios en tus solicitudes.')) +
+    '<div style="padding:10px 16px;border-top:1px solid var(--border)"><button type="button" class="a" style="font-size:13px" data-a="ir" data-v="notificaciones">Ver todas</button></div></div>' : '';
+  return '<div class="app' + (st.menu ? ' menu-on' : '') + '">' +
+    '<div class="velo" data-a="cerrarMenu"></div>' +
+    '<nav class="nav" aria-label="Principal"><div class="marca"><span class="logo">SG</span>ServiGest</div>' + items +
+      '<div class="nav-pie"><button type="button" class="item" data-a="reiniciar">' + ic('reiniciar') + 'Reiniciar datos de prueba</button></div></nav>' +
+    '<div class="main"><header class="top">' +
+      '<div class="row" style="flex-wrap:nowrap;min-width:0"><button type="button" class="btn btn-s ico btn-menu" aria-label="Abrir menú" data-a="abrirMenu">' + ic('menu') + '</button><div class="migas">' + titulo + '</div></div>' +
+      '<div class="row" style="flex-wrap:nowrap;gap:12px">' +
+        '<button type="button" class="btn btn-s ico" aria-label="Notificaciones, ' + n + ' sin leer" aria-haspopup="dialog" aria-expanded="' + st.campana + '" data-a="campana">' + ic('notif') + (n ? '<span class="badge">' + n + '</span>' : '') + '</button>' +
+        '<button type="button" class="yo" aria-haspopup="menu" aria-expanded="' + st.menuYo + '" data-a="menuYo"><span class="av">' + iniciales(u.nombre) + '</span><span class="nom">' + esc(u.nombre) + ' · ' + ROL[u.rol] + '</span></button>' +
+      '</div>' + campana +
+      (st.menuYo ? '<div class="card menu-yo" role="menu"><button type="button" role="menuitem" class="item" data-a="ir" data-v="perfil">' + ic('persona') + 'Mi perfil</button><button type="button" role="menuitem" class="item" data-a="salir">' + ic('salir') + 'Cerrar sesión</button></div>' : '') +
+    '</header>' + (st.sim.offline ? '<div class="banda" role="status">' + ic('alerta') + 'Sin conexión. Puedes seguir viendo los datos; los cambios no se guardan hasta que vuelvas a estar en línea.</div>' : '') +
+    '<main class="cont" id="contenido">' + cuerpo + '</main></div></div>';
+}
+function tabla(cols, filas, vacio) {
+  if (!filas.length) return vacio;
+  return '<div class="tabla-caja"><table class="tbl"><thead><tr>' + cols.map(function (c) { return '<th scope="col">' + c + '</th>'; }).join('') + '</tr></thead><tbody>' + filas.join('') + '</tbody></table></div>';
+}
+function vacio(icono, titulo, texto, accion) {
+  return '<div class="vacio"><span class="ic">' + ic(icono, 20) + '</span><span class="h2">' + titulo + '</span><span class="sub">' + texto + '</span>' + (accion || '') + '</div>';
+}
+function esqueleto() {
+  var b = function (w, h) { return '<span class="esq" style="display:block;width:' + w + ';height:' + h + 'px"></span>'; };
+  return '<div class="stack" aria-busy="true" aria-label="Cargando"><span class="stack" style="gap:8px">' + b('220px', 28) + b('140px', 14) + '</span><div class="kpis">' + [1, 2, 3].map(function () { return '<div class="card kpi">' + b('60%', 14) + b('40px', 28) + '</div>'; }).join('') + '</div>' +
+    '<div class="card stack" style="padding:16px;gap:14px">' + [1, 2, 3, 4, 5].map(function () { return b('100%', 18); }).join('') + '</div><span class="sub" role="status">Cargando…</span></div>';
+}
+function errorCarga() { return '<div class="card">' + vacio('alerta', 'No se pudo cargar esta pantalla', 'Algo falló de nuestro lado o se cortó la conexión. Tus datos están a salvo.', '<button type="button" class="btn btn-p" style="margin-top:6px" data-a="reintentar">' + ic('reiniciar', 14) + 'Reintentar</button>') + '</div>'; }
+function filaNoti(n) { return '<button type="button" class="noti' + (n.leida ? '' : ' nueva') + '" data-a="abrirNoti" data-id="' + n.id + '"><span class="p"></span><span class="stack" style="gap:2px"><span class="t">' + esc(n.texto) + '</span><span class="sub">' + hace(n.cuando) + (n.leida ? '' : ' · sin leer') + '</span></span></button>'; }
+function filaSol(s, u, cols) {
+  var celdas = {
+    codigo: '<td><button type="button" class="link mono" data-a="abrir" data-id="' + s.id + '">' + s.codigo + '</button></td>',
+    cliente: '<td>' + esc(cli(s.clienteId).n) + '</td>', categoria: '<td>' + esc(s.categoria) + '</td>',
+    prioridad: '<td>' + pPrio(s.prioridad) + '</td>', estado: '<td>' + pEstado(s.estado) + '</td>',
+    tecnico: '<td' + (s.tecnicoId ? '' : ' class="muted"') + '>' + esc(nomTec(s.tecnicoId)) + '</td>', plazo: '<td>' + pPlazo(s) + '</td>'
+  };
+  return '<tr class="clic" data-a="abrir" data-id="' + s.id + '">' + cols.map(function (c) { return celdas[c]; }).join('') + '</tr>';
+}
+var NOMBRE_COL = { codigo: 'Código', cliente: 'Cliente', categoria: 'Categoría', prioridad: 'Prioridad', estado: 'Estado', tecnico: 'Técnico', plazo: 'Plazo' };
+
+/* Inicio */
+function vInicio(u) {
+  var mias = visibles(u), abiertas = mias.filter(function (s) { return ABIERTOS.indexOf(s.estado) >= 0; });
+  function k(t, v, nota, filtro) { return '<button type="button" class="card kpi" data-a="kpi" data-f=\'' + JSON.stringify(filtro || {}) + '\'><span class="sub">' + t + '</span><span class="num">' + v + '</span>' + (nota ? '<span class="sub">' + nota + '</span>' : '') + '</button>'; }
+  var kpis, atencion, cols = ['codigo', 'categoria', 'estado', 'plazo'], saludo = 'Hola, ' + esc(u.nombre.split(' ')[0]), subt = ROL[u.rol];
+  var urg = function (s) { var p = plazo(s).k; return (p === 'vencida' ? 0 : p === 'por_vencer' ? 1 : 2) * 1e13 + s.limite; };
+  if (u.rol === 'cliente') {
+    subt = esc(cli(u.clienteId).n);
+    var mes = new Date(); mes.setDate(1); mes.setHours(0, 0, 0, 0);
+    kpis = k('Solicitudes abiertas', abiertas.length, 'En atención o por atender', {}) + k('Esperan tu respuesta', mias.filter(function (s) { return s.estado === 'pendiente_info'; }).length, 'El técnico pidió información', { estado: 'pendiente_info' }) + k('Resueltas este mes', mias.filter(function (s) { return s.resueltaEn && s.resueltaEn >= mes.getTime(); }).length, 'Pendientes de cierre: ' + mias.filter(function (s) { return s.estado === 'resuelta'; }).length, { estado: 'resuelta' });
+    atencion = mias.filter(function (s) { return s.estado !== 'cerrada' && s.estado !== 'cancelada'; }).sort(function (a, b) { return (a.estado === 'pendiente_info' ? 0 : 1) - (b.estado === 'pendiente_info' ? 0 : 1) || urg(a) - urg(b); });
+  } else if (u.rol === 'tecnico') {
+    var act = mias.filter(function (s) { return ACTIVOS.indexOf(s.estado) >= 0; });
+    kpis = k('Mis asignadas', act.length, 'Asignadas, en proceso o en espera', {}) + k('Vencen hoy', act.filter(function (s) { return s.limite - Date.now() < DIA; }).length, 'Incluye las vencidas', { plazo: 'por_vencer' }) + k('Esperando al cliente', act.filter(function (s) { return s.estado === 'pendiente_info'; }).length, 'Pediste información', { estado: 'pendiente_info' });
+    atencion = act.sort(function (a, b) { return urg(a) - urg(b); }); cols = ['codigo', 'cliente', 'prioridad', 'estado', 'plazo'];
+  } else {
+    var cuenta = function (e) { return mias.filter(function (s) { return s.estado === e; }).length; };
+    // También en riesgo: asignadas a un técnico que fue desactivado
+    var riesgo = abiertas.filter(function (s) { var p = plazo(s).k; return p === 'vencida' || p === 'por_vencer' || tecInactivo(s); });
+    if (u.rol === 'coordinador') {
+      kpis = k('Por aprobar', cuenta('registrada'), '', { estado: 'registrada' }) + k('Por asignar', cuenta('aprobada'), '', { estado: 'aprobada' }) + k('Por vencer o vencidas', riesgo.length, '', { plazo: 'riesgo' }) + k('Por cerrar', cuenta('resuelta'), '', { estado: 'resuelta' });
+      atencion = mias.filter(function (s) { return ['registrada', 'aprobada', 'resuelta'].indexOf(s.estado) >= 0 || riesgo.indexOf(s) >= 0; }).sort(function (a, b) { return urg(a) - urg(b); });
+    } else {
+      kpis = k('Total de solicitudes', mias.length, '', {}) + k('Abiertas', abiertas.length, '', { estado: 'abiertas' }) + k('Vencidas', abiertas.filter(function (s) { return plazo(s).k === 'vencida'; }).length, '', { plazo: 'vencida' }) + '<button type="button" class="card kpi" data-a="ir" data-v="usuarios"><span class="sub">Usuarios activos</span><span class="num">' + db.usuarios.filter(function (x) { return x.activo; }).length + '</span></button>';
+      atencion = riesgo.sort(function (a, b) { return urg(a) - urg(b); });
+    }
+    cols = ['codigo', 'cliente', 'prioridad', 'estado', 'tecnico', 'plazo'];
+  }
+  var accion = (u.rol === 'cliente' || u.rol === 'coordinador') ? '<button type="button" class="btn btn-p" data-a="ir" data-v="nueva">' + ic('plus') + (u.rol === 'cliente' ? 'Nueva solicitud' : 'Registrar para un cliente') + '</button>' : (u.rol === 'administrador' ? '<button type="button" class="btn btn-s" data-a="ir" data-v="dashboard">' + ic('dash') + 'Ver dashboard</button>' : '');
+  var vacioTxt = { cliente: vacio('sol', 'Aún no registras solicitudes', 'Cuando registres una, verás aquí su estado y su plazo.', '<button type="button" class="btn btn-p" style="margin-top:6px" data-a="ir" data-v="nueva">' + ic('plus') + 'Nueva solicitud</button>'), tecnico: vacio('sol', 'No tienes solicitudes asignadas', 'Te avisaremos cuando llegue una.'), coordinador: vacio('check', 'No hay nada pendiente', 'Las solicitudes por aprobar, asignar o cerrar aparecerán aquí.'), administrador: vacio('check', 'Ninguna solicitud en riesgo', 'Aquí aparecen las vencidas y las que están por vencer.') }[u.rol];
+  return '<div class="between"><div class="stack" style="gap:2px"><h1 class="h1">' + saludo + '</h1><span class="sub">' + subt + '</span></div>' + accion + '</div>' +
+    primerosPasos(u) +
+    '<div class="kpis">' + kpis + '</div>' +
+    '<section class="card" style="overflow:hidden"><div class="cab"><h2 class="h2">Requieren tu atención</h2><button type="button" class="a" style="font-size:13px" data-a="ir" data-v="solicitudes">Ver todas</button></div>' +
+    tabla(cols.map(function (c) { return NOMBRE_COL[c]; }), atencion.slice(0, 6).map(function (s) { return filaSol(s, u, cols); }), vacioTxt) + '</section>';
+}
+function tecInactivo(s) { return !!s.tecnicoId && ACTIVOS.indexOf(s.estado) >= 0 && !usr(tec(s.tecnicoId).usuarioId).activo; }
+// Pasos de 07-onboarding.md: [título, dónde, hecho(u), vista, filtro opcional]
+var PASOS = {
+  cliente: [['Completar tu teléfono', 'Mi perfil', function (u) { return !!u.telefono; }, 'perfil'], ['Registrar tu primera solicitud', 'Nueva solicitud', function (u) { return visibles(u).length > 0; }, 'nueva'], ['Ver su estado e historial', 'Detalle de la solicitud', function (u) { return !!u.hechos.vioDetalle; }, 'solicitudes']],
+  tecnico: [['Completar tu teléfono', 'Mi perfil', function (u) { return !!u.telefono; }, 'perfil'], ['Abrir tu primera asignada', 'Mis asignadas', function (u) { return !!u.hechos.vioDetalle; }, 'solicitudes'], ['Registrar avance o resolverla', 'Detalle de la solicitud', function (u) { return !!u.hechos.cambio; }, 'solicitudes']],
+  coordinador: [['Revisar las solicitudes por aprobar', 'Solicitudes › Registradas', function (u) { return !!u.hechos.vioLista; }, 'solicitudes', { estado: 'registrada' }], ['Conocer la carga del equipo', 'Carga de técnicos', function (u) { return !!u.hechos.vioCarga; }, 'carga'], ['Asignar la primera solicitud', 'Detalle › Asignar', function (u) { return !!u.hechos.asigno; }, 'solicitudes', { estado: 'aprobada' }]],
+  administrador: [['Revisar especialidades, categorías y plazos', 'Catálogos', function (u) { return !!u.hechos.viocatalogos; }, 'catalogos'], ['Revisar los técnicos', 'Técnicos', function (u) { return !!u.hechos.viotecnicos; }, 'tecnicos'], ['Registrar los clientes y sus sedes', 'Clientes y sedes', function (u) { return !!u.hechos.vioclientes; }, 'clientes']]
+};
+function primerosPasos(u) {
+  if (!u.nuevo || u.hechos.ocultoPasos) return '';
+  var pasos = PASOS[u.rol], hechos = pasos.filter(function (p) { return p[2](u); }).length;
+  if (hechos === 3) return '';
+  return '<section class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;border-color:var(--accent-bg)">' +
+    '<div class="between" style="align-items:center"><div class="stack" style="gap:2px"><h2 class="h2">Primeros pasos</h2><span class="sub">' + hechos + ' de 3 · se marcan solos cuando los haces</span></div><button type="button" class="btn btn-g btn-sm" data-a="ocultarPasos">Ocultar</button></div>' +
+    '<div class="prog" role="progressbar" aria-label="Primeros pasos" aria-valuemin="0" aria-valuemax="3" aria-valuenow="' + hechos + '"><span style="width:' + Math.round(hechos / 3 * 100) + '%"></span></div>' +
+    '<div class="pasos">' + pasos.map(function (p) { var h = p[2](u); return '<button type="button" class="paso' + (h ? ' hecho' : '') + '" data-a="paso" data-v="' + p[3] + '" data-f=\'' + JSON.stringify(p[4] || {}) + '\'><span class="marca-paso">' + (h ? ic('check', 12) : '') + '</span><span class="stack" style="gap:2px"><span style="font-weight:500">' + p[0] + '</span><span class="sub">' + p[1] + '</span></span></button>'; }).join('') + '</div></section>';
+}
+
+/* Lista de solicitudes */
+function filtrar(u) {
+  var f = st.filtros, q = f.q.trim().toLowerCase();
+  return visibles(u).filter(function (s) {
+    if (q && (s.codigo + ' ' + s.equipo + ' ' + cli(s.clienteId).n).toLowerCase().indexOf(q) < 0) return false;
+    if (f.estado === 'abiertas' ? ABIERTOS.indexOf(s.estado) < 0 : (f.estado && s.estado !== f.estado)) return false;
+    if (f.prioridad && s.prioridad !== f.prioridad) return false;
+    if (f.categoria && s.categoria !== f.categoria) return false;
+    if (f.plazo) { var k = plazo(s).k; if (f.plazo === 'riesgo' ? (k !== 'vencida' && k !== 'por_vencer') : k !== f.plazo) return false; }
+    // Un rango al revés no filtra: se muestra el error junto a las fechas
+    if (!fechasMal() && f.desde && s.creada < new Date(f.desde + 'T00:00').getTime()) return false;
+    if (!fechasMal() && f.hasta && s.creada >= new Date(f.hasta + 'T00:00').getTime() + DIA) return false;
+    return true;
+  });
+}
+function fechasMal() { var f = st.filtros; return !!(f.desde && f.hasta && f.desde > f.hasta); }
+function sel(id, k, etiqueta, ops) {
+  return '<select class="inp" id="' + id + '" aria-label="' + etiqueta + '" data-in="filtro" data-k="' + k + '" style="width:auto;min-width:130px' + (st.filtros[k] ? ';border-color:var(--primary)' : '') + '"><option value="">' + etiqueta + ': todos</option>' +
+    ops.map(function (o) { return '<option value="' + o[0] + '"' + (st.filtros[k] === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
+}
+function vSolicitudes(u) {
+  var lista = filtrar(u), POR = 8, paginas = Math.max(1, Math.ceil(lista.length / POR));
+  if (st.pagina > paginas) st.pagina = paginas;
+  var desde = (st.pagina - 1) * POR, ver = lista.slice(desde, desde + POR);
+  var cols = ['codigo', 'cliente', 'categoria', 'prioridad', 'estado', 'tecnico', 'plazo'].filter(function (c) { return !(u.rol === 'cliente' && c === 'cliente') && !(u.rol === 'tecnico' && c === 'tecnico'); });
+  var hayFiltro = Object.keys(st.filtros).some(function (k) { return st.filtros[k]; });
+  var titulo = u.rol === 'cliente' ? 'Mis solicitudes' : u.rol === 'tecnico' ? 'Mis asignadas' : 'Solicitudes';
+  var total = visibles(u).length;
+  var vac = hayFiltro ? vacio('buscar', 'Ningún resultado con estos filtros', 'Prueba con otros filtros o quítalos.', '<button type="button" class="btn btn-s" style="margin-top:6px" data-a="limpiar">Limpiar filtros</button>')
+    : u.rol === 'cliente' ? vacio('sol', 'Aún no registras solicitudes', 'Registra la primera y sigue aquí su estado.', '<button type="button" class="btn btn-p" style="margin-top:6px" data-a="ir" data-v="nueva">' + ic('plus') + 'Nueva solicitud</button>')
+    : u.rol === 'tecnico' ? vacio('sol', 'No tienes solicitudes asignadas', 'Te avisaremos cuando llegue una.') : vacio('sol', 'No hay solicitudes por revisar', 'Cuando un cliente registre una, aparecerá aquí.', '<button type="button" class="btn btn-p" style="margin-top:6px" data-a="ir" data-v="nueva">Registrar en nombre de un cliente</button>');
+  var pagBtns = '';
+  for (var p = 1; p <= paginas; p++) pagBtns += '<button type="button" class="btn ico' + (p === st.pagina ? '' : ' btn-g') + '"' + (p === st.pagina ? ' aria-current="page" style="background:var(--hover)"' : '') + ' data-a="pagina" data-p="' + p + '">' + p + '</button>';
+  return '<div class="between"><div class="stack" style="gap:2px"><h1 class="h1">' + titulo + '</h1><span class="sub">' + total + ' solicitudes</span></div>' +
+    (u.rol === 'cliente' || u.rol === 'coordinador' ? '<button type="button" class="btn btn-p" data-a="ir" data-v="nueva">' + ic('plus') + 'Nueva solicitud</button>' : '') + '</div>' +
+    '<div class="row" role="search"><label class="search">' + ic('buscar') + '<input class="inp" id="f-q" type="search" placeholder="Buscar código, equipo o cliente" aria-label="Buscar código, equipo o cliente" data-in="filtro" data-k="q" value="' + esc(st.filtros.q) + '"></label>' +
+      sel('f-estado', 'estado', 'Estado', [['abiertas', 'Abiertas']].concat(Object.keys(ESTADOS).map(function (e) { return [e, ESTADOS[e][0]]; }))) +
+      sel('f-prio', 'prioridad', 'Prioridad', db.prioridades.map(function (p) { return [p.id, p.n]; })) +
+      sel('f-cat', 'categoria', 'Categoría', db.categorias.map(function (c) { return [c.n, c.n]; })) +
+      sel('f-plazo', 'plazo', 'Plazo', [['a_tiempo', 'A tiempo'], ['por_vencer', 'Por vencer'], ['vencida', 'Vencida'], ['riesgo', 'Por vencer o vencida'], ['cumplida', 'Cumplida'], ['incumplida', 'Incumplida']]) +
+      '<label class="row" style="gap:6px;flex-wrap:nowrap"><span class="sub">Desde</span><input class="inp" type="date" id="f-desde" data-in="filtro" data-k="desde" value="' + esc(st.filtros.desde) + '" style="width:auto"' + (fechasMal() ? ' aria-invalid="true" aria-describedby="f-fechas-e"' : '') + '></label>' +
+      '<label class="row" style="gap:6px;flex-wrap:nowrap"><span class="sub">Hasta</span><input class="inp" type="date" id="f-hasta" data-in="filtro" data-k="hasta" value="' + esc(st.filtros.hasta) + '" style="width:auto"' + (fechasMal() ? ' aria-invalid="true" aria-describedby="f-fechas-e"' : '') + '></label>' +
+      (hayFiltro ? '<button type="button" class="btn btn-g" data-a="limpiar">' + ic('x', 14) + 'Limpiar</button>' : '') + '</div>' +
+    (fechasMal() ? '<span class="err" id="f-fechas-e" role="alert">La fecha "Desde" es posterior a "Hasta". Corrige el rango; mientras tanto no se filtra por fecha.</span>' : '') +
+    '<div class="card" style="overflow:hidden">' + tabla(cols.map(function (c) { return NOMBRE_COL[c]; }), ver.map(function (s) { return filaSol(s, u, cols); }), vac) + '</div>' +
+    (lista.length ? '<div class="between" style="align-items:center"><span class="sub">Mostrando ' + (desde + 1) + '–' + (desde + ver.length) + ' de ' + lista.length + '</span><nav class="row" style="gap:4px" aria-label="Paginación"><button type="button" class="btn btn-s ico" aria-label="Página anterior" data-a="pagina" data-p="' + (st.pagina - 1) + '"' + (st.pagina === 1 ? ' disabled' : '') + '>' + ic('izq') + '</button>' + pagBtns + '<button type="button" class="btn btn-s ico" aria-label="Página siguiente" data-a="pagina" data-p="' + (st.pagina + 1) + '"' + (st.pagina === paginas ? ' disabled' : '') + '>' + ic('der') + '</button></nav></div>' : '');
+}
+
+/* Nueva solicitud */
+function borrador(u) {
+  if (!st.borrador) {
+    var c = u.clienteId || db.clientes[0].id;
+    st.borrador = { clienteId: c, sede: cli(c).sedes[0], categoria: '', prioridad: 'media', equipo: '', descripcion: '', adjuntos: [] };
+  }
+  return st.borrador;
+}
+function vNueva(u) {
+  var b = borrador(u), e = st.err, c = cli(b.clienteId);
+  function campo(id, etiqueta, control, error, ayuda, ancho) {
+    return '<div class="field"' + (ancho ? ' style="grid-column:1/-1"' : '') + '><label class="lbl" for="' + id + '">' + etiqueta + '</label>' + control + (error ? '<span class="err" id="' + id + '-e">' + esc(error) + '</span>' : ayuda ? '<span class="ayuda">' + ayuda + '</span>' : '') + '</div>';
+  }
+  function inval(k) { return e[k] ? ' aria-invalid="true" aria-describedby="ns-' + k + '-e"' : ''; }
+  var p = prio(b.prioridad);
+  return '<div class="stack" style="gap:2px"><h1 class="h1">Nueva solicitud</h1><span class="sub">El plazo de atención lo calcula el sistema según la prioridad.</span></div>' +
+    '<form class="card" data-form="nueva" novalidate style="padding:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:800px">' +
+    (u.rol === 'coordinador' ? campo('ns-cliente', 'Cliente <span class="opt">(solo lo elige el coordinador)</span>', '<select class="inp" id="ns-cliente" data-in="borrador" data-k="clienteId" data-re="1">' + db.clientes.map(function (x) { return '<option value="' + x.id + '"' + (x.id === b.clienteId ? ' selected' : '') + '>' + esc(x.n) + '</option>'; }).join('') + '</select>', '', '', true) : '') +
+    campo('ns-sede', 'Sede', '<select class="inp" id="ns-sede" data-in="borrador" data-k="sede">' + c.sedes.map(function (x) { return '<option' + (x === b.sede ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>') +
+    campo('ns-categoria', 'Categoría de servicio', '<select class="inp" id="ns-categoria" data-in="borrador" data-k="categoria"' + inval('categoria') + '><option value="">Elige una categoría</option>' + db.categorias.filter(function (x) { return x.activo; }).map(function (x) { return '<option' + (x.n === b.categoria ? ' selected' : '') + '>' + esc(x.n) + '</option>'; }).join('') + '</select>', e.categoria) +
+    campo('ns-prioridad', 'Prioridad solicitada', '<select class="inp" id="ns-prioridad" data-in="borrador" data-k="prioridad" data-re="1">' + db.prioridades.map(function (x) { return '<option value="' + x.id + '"' + (x.id === b.prioridad ? ' selected' : '') + '>' + x.n + '</option>'; }).join('') + '</select>', '', 'Plazo de atención: ' + p.horas + ' horas') +
+    campo('ns-equipo', 'Equipo o recurso afectado', '<input class="inp" id="ns-equipo" type="text" maxlength="' + LIM.equipo + '" placeholder="Ej.: Switch piso 2" data-in="borrador" data-k="equipo" value="' + esc(b.equipo) + '"' + inval('equipo') + '>', e.equipo) +
+    campo('ns-descripcion', 'Descripción', '<textarea class="inp" id="ns-descripcion" rows="5" maxlength="' + LIM.descripcion + '" placeholder="Qué pasa, desde cuándo y a cuántas personas afecta" data-in="borrador" data-k="descripcion"' + inval('descripcion') + '>' + esc(b.descripcion) + '</textarea><span class="cnt-txt" id="ns-desc-cnt" aria-live="polite">' + b.descripcion.length + ' / ' + LIM.descripcion + '</span>', e.descripcion, '', true) +
+    '<div class="field" style="grid-column:1/-1"><span class="lbl">Adjuntos <span class="opt">(opcional)</span></span><label class="zona" for="ns-adjuntos">' + ic('subir', 20) + '<span>Arrastra archivos o <span class="a">elige desde tu equipo</span></span><span class="ayuda">PDF, JPG o PNG · máximo 5 MB cada uno · hasta 5 archivos (' + b.adjuntos.length + ' de 5)</span></label><input id="ns-adjuntos" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" data-in="adjuntos" style="position:absolute;width:1px;height:1px;opacity:0">' +
+      (e.adjuntos ? '<span class="err" role="alert">' + esc(e.adjuntos) + '</span>' : '') +
+      (b.adjuntos.length ? '<div class="row">' + b.adjuntos.map(function (a, i) { return '<span class="adj">' + ic('archivo') + esc(a.n) + ' <span class="sub">' + a.t + '</span><button type="button" class="btn btn-g ico" style="width:22px;height:22px" aria-label="Quitar ' + esc(a.n) + '" data-a="quitarAdj" data-i="' + i + '">' + ic('x', 12) + '</button></span>'; }).join('') + '</div>' : '') + '</div>' +
+    '<div class="modal-pie" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:16px"><button type="button" class="btn btn-s" data-a="ir" data-v="solicitudes">Cancelar</button><button type="submit" class="btn btn-p">Registrar solicitud</button></div>' +
+    '</form>';
+}
+
+/* Detalle */
+function vDetalle(u) {
+  var s = por(db.solicitudes, st.solId);
+  if (!s || visibles(u).indexOf(s) < 0) return '<div class="card">' + vacio('alerta', ERR.NO_ENCONTRADO, 'Puede que no exista o que no tengas acceso a ella.', '<button type="button" class="btn btn-s" style="margin-top:6px" data-a="ir" data-v="solicitudes">Volver a la lista</button>') + '</div>';
+  var acciones = TRANS.map(function (t, i) { return puede(t, s, u) ? '<button type="button" class="btn btn-' + t.tipo + '" data-a="transicion" data-i="' + i + '">' + t.btn + '</button>' : ''; }).join('');
+  if (u.rol === 'coordinador' && s.estado === 'aprobada') acciones += '<button type="button" class="btn btn-p" data-a="modalAsignar">Asignar técnico</button>';
+  if (u.rol === 'coordinador' && ACTIVOS.indexOf(s.estado) >= 0) acciones += '<button type="button" class="btn btn-s" data-a="modalAsignar">Reasignar</button>';
+  // Botones principales al final, como en el diseño
+  var orden = acciones.split('</button>').filter(Boolean).map(function (b) { return b + '</button>'; }).sort(function (a, b) { return (a.indexOf('btn-p') >= 0) - (b.indexOf('btn-p') >= 0); }).join('');
+  var c = catDe(s.categoria), inact = tecInactivo(s);
+  var datos = [['Cliente', cli(s.clienteId).n], ['Sede', s.sede], ['Categoría', s.categoria + (c && !c.activo ? ' (inactiva)' : '')], ['Equipo afectado', s.equipo || '—'], ['Técnico asignado', nomTec(s.tecnicoId) + (inact ? ' (inactivo)' : '')], ['Fecha límite', fecha(s.limite)]];
+  var alerta = inact && u.rol !== 'cliente' ? '<div class="alerta adv" role="status">' + ic('alerta') + 'El técnico asignado fue desactivado. ' + (u.rol === 'coordinador' ? 'Reasigna la solicitud para que no se venza.' : 'El coordinador debe reasignarla.') + '</div>' : '';
+  var hist = s.historial.map(function (h) {
+    var q = usr(h.quien);
+    var cambio = h.de && h.de !== h.a ? ESTADOS[h.de][0] + ' → ' + ESTADOS[h.a][0] : h.de === h.a ? 'Reasignación' : ESTADOS[h.a][0];
+    return '<li><span class="eje"><span class="p"></span><span class="l"></span></span><div class="c"><span style="font-weight:500">' + cambio + '</span><span class="sub">' + esc(q ? q.nombre : '—') + ' · ' + fecha(h.cuando) + '</span>' + (h.nota ? '<span style="font-size:13px">' + esc(h.nota) + '</span>' : '') + '</div></li>';
+  }).join('');
+  return '<div class="between" style="align-items:center"><div class="row" style="gap:10px"><h1 class="h1 mono" style="font-size:24px">' + s.codigo + '</h1>' + pEstado(s.estado) + pill('Prioridad ' + prio(s.prioridad).n.toLowerCase(), TONO_PRIO[s.prioridad]) + (plazo(s).k ? '<span class="pill t-' + plazo(s).tono + '">' + ic('reloj', 12) + plazo(s).t + '</span>' : '') + '</div>' +
+    '<div class="row">' + (orden || '<span class="sub">No hay acciones para ti en este estado.</span>') + '</div></div>' + alerta +
+    '<div class="dos"><section class="card stack" style="padding:16px"><h2 class="h2">Datos</h2><dl class="datos">' + datos.map(function (d) { return '<div><dt>' + d[0] + '</dt><dd>' + esc(d[1]) + '</dd></div>'; }).join('') + '</dl>' +
+      '<div class="stack" style="gap:4px;border-top:1px solid var(--border);padding-top:14px"><span class="lbl muted">Descripción</span><p style="margin:0">' + esc(s.descripcion) + '</p></div>' +
+      '<div class="stack" style="gap:6px"><span class="lbl muted">Adjuntos</span>' + (s.adjuntos.length ? '<div class="row">' + s.adjuntos.map(function (a) { return '<span class="adj">' + ic('archivo') + esc(a.n) + ' <span class="sub">' + a.t + '</span></span>'; }).join('') + '</div>' : '<span class="sub">Sin adjuntos</span>') + '</div>' +
+      '<div class="caja-gris"><span class="lbl muted">Resolución</span><p style="margin:0"' + (s.resolucion ? '' : ' class="sub"') + '>' + esc(s.resolucion || 'Vacía hasta que el técnico resuelve. Sin resolución no se puede cerrar.') + '</p></div></section>' +
+    '<section class="card stack" style="padding:16px;gap:14px"><h2 class="h2">Historial <span class="sub" style="font-weight:400">· ' + s.historial.length + ' cambios</span></h2><ol class="hist">' + hist + '</ol></section></div>';
+}
+
+/* Carga de técnicos */
+function barraCarga(c, max) { return '<div class="row" style="flex-wrap:nowrap"><div class="barra" style="width:90px" role="img" aria-label="' + c + ' de ' + max + '"><span style="width:' + Math.min(100, c / max * 100) + '%;background:' + (c >= max ? 'var(--danger-dot)' : 'var(--primary)') + '"></span></div><span style="font-variant-numeric:tabular-nums;white-space:nowrap">' + c + ' de ' + max + '</span></div>'; }
+function vCarga(u) {
+  var esAdmin = u.rol === 'administrador';
+  return '<div class="between"><div class="stack" style="gap:2px"><h1 class="h1">Carga de técnicos</h1><span class="sub">Activas = asignadas, en proceso o esperando al cliente. La disponibilidad se cambia en Administración › Técnicos.</span></div>' + (esAdmin ? '<button type="button" class="btn btn-s" data-a="ir" data-v="tecnicos">Ir a Técnicos</button>' : '') + '</div>' +
+    '<div class="card" style="overflow:hidden">' + tabla(['Técnico', 'Especialidades', 'Estado', 'Carga', 'Activas'], db.tecnicos.map(function (t) {
+      var tu = usr(t.usuarioId), act = db.solicitudes.filter(function (s) { return s.tecnicoId === t.id && ACTIVOS.indexOf(s.estado) >= 0; });
+      var est = !tu.activo ? pill('Inactivo', 'danger') : t.disponible ? pill('Disponible', 'success') : pill('No disponible', 'neutral');
+      return '<tr' + (tu.activo ? '' : ' class="off"') + '><td style="font-weight:500">' + esc(tu.nombre) + (!tu.activo && act.length ? '<br><span class="err" style="font-weight:400">Inactivo con ' + act.length + ' activas: hay que reasignarlas</span>' : '') + '</td><td>' + esc(t.esp.join(', ')) + '</td><td>' + est + '</td><td>' + barraCarga(act.length, t.max) + '</td>' +
+        '<td>' + (act.length ? act.map(function (s) { return '<button type="button" class="link mono" style="margin-right:10px" data-a="abrir" data-id="' + s.id + '">' + s.codigo.slice(-6) + '</button>'; }).join('') : '<span class="muted">—</span>') + '</td></tr>';
+    }), vacio('carga', 'Todavía no hay técnicos', esAdmin ? 'Créalos desde Administración › Técnicos.' : 'El administrador los registra.')) + '</div>';
+}
+
+/* Dashboard */
+function vDashboard() {
+  var f = st.dash;
+  var desdeD = f.periodo ? Date.now() - (+f.periodo) * DIA : 0;
+  var base = db.solicitudes.filter(function (s) { return s.creada >= desdeD && (!f.cat || s.categoria === f.cat) && (!f.tec || s.tecnicoId === f.tec) && (!f.cli || s.clienteId === f.cli); });
+  var abiertas = base.filter(function (s) { return ABIERTOS.indexOf(s.estado) >= 0; });
+  var term = base.filter(function (s) { return s.resueltaEn; });
+  var cumpl = term.length ? Math.round(term.filter(function (s) { return s.resueltaEn <= s.limite; }).length / term.length * 100) + ' %' : '—';
+  var prom = term.length ? (term.reduce(function (a, s) { return a + (s.resueltaEn - s.creada); }, 0) / term.length / H).toFixed(1).replace('.', ',') + ' h' : '—';
+  var venc = abiertas.filter(function (s) { return plazo(s).k === 'vencida'; }).length;
+  function selD(k, etq, ops) { return '<select class="inp" aria-label="' + etq + '" id="d-' + k + '" data-in="dash" data-k="' + k + '" style="width:auto"><option value="">' + etq + ': todos</option>' + ops.map(function (o) { return '<option value="' + o[0] + '"' + (f[k] === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>'; }
+  function barras(pares) {
+    var max = Math.max.apply(null, pares.map(function (p) { return p[1]; }).concat([1]));
+    return '<div class="barras">' + pares.map(function (p) { return '<div class="fila"><span title="' + esc(p[0]) + '">' + esc(p[0]) + '</span><div class="barra"><span style="width:' + (p[1] / max * 100) + '%;background:' + p[2] + '"></span></div><span>' + p[1] + '</span></div>'; }).join('') + '</div>';
+  }
+  var colTono = function (t) { return t === 'critical' ? 'var(--critical)' : 'var(--' + t + '-dot)'; };
+  var porEstado = Object.keys(ESTADOS).map(function (e) { return [ESTADOS[e][0], base.filter(function (s) { return s.estado === e; }).length, colTono(ESTADOS[e][1])]; });
+  var porPrio = db.prioridades.map(function (p) { return [p.n, base.filter(function (s) { return s.prioridad === p.id; }).length, colTono(TONO_PRIO[p.id])]; });
+  var porTec = db.tecnicos.map(function (t) { return [usr(t.usuarioId).nombre, carga(t.id), 'var(--primary)']; });
+  // Creadas y resueltas por día, últimos 7 días
+  var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  var dias = []; for (var i = 6; i >= 0; i--) dias.push(hoy.getTime() - i * DIA);
+  function porDia(campo) { return dias.map(function (d) { return base.filter(function (s) { return s[campo] && s[campo] >= d && s[campo] < d + DIA; }).length; }); }
+  var cre = porDia('creada'), res = porDia('resueltaEn'), top = Math.max.apply(null, cre.concat(res).concat([2]));
+  var W = 600, Hh = 180, L = 28, R = 12, T = 12, B = 26;
+  var x = function (i) { return L + i * (W - L - R) / 6; }, y = function (v) { return T + (Hh - T - B) * (1 - v / top); };
+  var linea = function (v) { return v.map(function (n, i) { return x(i).toFixed(1) + ',' + y(n).toFixed(1); }).join(' '); };
+  var mitad = Math.round(top / 2);
+  var svg = '<svg class="chart" viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto" role="img" aria-label="Creadas y resueltas por día en los últimos 7 días">' +
+    [0, mitad, top].map(function (v) { return '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line)" stroke-width="1"/><text x="' + (L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>'; }).join('') +
+    dias.map(function (d, i) { return '<text x="' + x(i) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + new Date(d).toLocaleDateString('es-EC', { weekday: 'short' }).replace('.', '') + '</text>'; }).join('') +
+    '<polyline fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" points="' + linea(cre) + '"/><polyline fill="none" stroke="var(--success-dot)" stroke-width="2" stroke-linejoin="round" points="' + linea(res) + '"/>' +
+    '<circle cx="' + x(6) + '" cy="' + y(cre[6]) + '" r="3.5" fill="var(--primary)"/><circle cx="' + x(6) + '" cy="' + y(res[6]) + '" r="3.5" fill="var(--success-dot)"/></svg>';
+  var prox = abiertas.filter(function (s) { return plazo(s).k !== 'vencida'; }).sort(function (a, b) { return a.limite - b.limite; }).slice(0, 5);
+  var selP = '<select class="inp" aria-label="Periodo" id="d-periodo" data-in="dash" data-k="periodo" style="width:auto">' + [['7', 'Últimos 7 días'], ['30', 'Últimos 30 días'], ['', 'Todo el historial']].map(function (o) { return '<option value="' + o[0] + '"' + (f.periodo === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
+  var cabD = '<div class="between" style="align-items:center"><h1 class="h1">Dashboard</h1><div class="row">' + selP +
+      selD('cat', 'Categoría', db.categorias.map(function (c) { return [c.n, c.n]; })) + selD('tec', 'Técnico', db.tecnicos.map(function (t) { return [t.id, usr(t.usuarioId).nombre]; })) + selD('cli', 'Cliente', db.clientes.map(function (c) { return [c.id, c.n]; })) + '</div></div>';
+  if (!base.length) return cabD + '<div class="card">' + vacio('dash', 'Aún no hay datos en este periodo', 'Prueba con un periodo más largo o quita los filtros.', '<button type="button" class="btn btn-s" style="margin-top:6px" data-a="dashTodo">Ver todo el historial</button>') + '</div>';
+  return cabD +
+    '<div class="kpis">' + [['Total', base.length], ['Abiertas', abiertas.length], ['Vencidas', venc], ['Cumplimiento de plazo', cumpl], ['Tiempo promedio de resolución', prom]].map(function (k, i) { return '<div class="card kpi"><span class="sub">' + k[0] + '</span><span class="num"' + (i === 2 && venc ? ' style="color:var(--danger)"' : '') + '>' + k[1] + '</span></div>'; }).join('') + '</div>' +
+    '<div class="tres">' + [['Por estado', porEstado], ['Por prioridad', porPrio], ['Carga por técnico (activas)', porTec]].map(function (g) { return '<section class="card stack" style="padding:16px;gap:12px"><h2 class="h2">' + g[0] + '</h2>' + barras(g[1]) + '</section>'; }).join('') + '</div>' +
+    '<div class="dos"><section class="card stack" style="padding:16px;gap:12px"><div class="between" style="align-items:center"><h2 class="h2">Creadas y resueltas por día</h2><div class="leyenda"><span><span class="dot" style="background:var(--primary)"></span>Creadas</span><span><span class="dot" style="background:var(--success-dot)"></span>Resueltas</span></div></div>' + svg + '</section>' +
+    '<section class="card" style="padding:16px;display:flex;flex-direction:column;gap:4px"><h2 class="h2" style="margin-bottom:8px">Próximas a vencer</h2>' + (prox.length ? prox.map(function (s) { return '<button type="button" class="noti" style="padding:0;height:44px;align-items:center;justify-content:space-between" data-a="abrir" data-id="' + s.id + '"><span class="mono" style="font-weight:500">' + s.codigo + '</span>' + pPlazo(s) + '</button>'; }).join('') : '<span class="sub">Ninguna abierta a tiempo con estos filtros.</span>') + '</section></div>';
+}
+
+/* Notificaciones */
+function vNotificaciones(u) {
+  var mias = db.notificaciones.filter(function (n) { return n.uid === u.id; }).sort(function (a, b) { return b.cuando - a.cuando; });
+  return '<div class="between" style="align-items:center"><div class="stack" style="gap:2px"><h1 class="h1">Notificaciones</h1><span class="sub">' + noLeidas(u) + ' sin leer</span></div>' + (noLeidas(u) ? '<button type="button" class="btn btn-s" data-a="leerTodas">' + ic('check') + 'Marcar todas como leídas</button>' : '') + '</div>' +
+    '<div class="card" style="overflow:hidden">' + (mias.length ? mias.map(filaNoti).join('') : vacio('notif', 'No tienes notificaciones', 'Aquí verás los cambios en tus solicitudes.')) + '</div>';
+}
+
+/* Administración: usuarios */
+function relaciones(u) {
+  return db.solicitudes.some(function (s) { return s.creadoPor === u.id || (u.tecnicoId && s.tecnicoId === u.tecnicoId) || s.historial.some(function (h) { return h.quien === u.id; }); });
+}
+function vUsuarios(u) {
+  var q = st.adm.q.trim().toLowerCase();
+  var lista = db.usuarios.filter(function (x) { return (!q || (x.nombre + ' ' + x.correo).toLowerCase().indexOf(q) >= 0) && (!st.adm.rol || x.rol === st.adm.rol) && (!st.adm.activo || (st.adm.activo === 'si') === x.activo); });
+  var filas = lista.map(function (x) {
+    return '<tr' + (x.activo ? '' : ' class="off"') + '><td style="font-weight:500">' + esc(x.nombre) + (x.id === u.id ? ' <span class="sub">(tú)</span>' : '') + '</td><td class="muted">' + esc(x.correo) + '</td><td>' + ROL[x.rol] + (x.clienteId ? ' <span class="sub">· ' + esc(cli(x.clienteId).n) + '</span>' : '') + '</td><td>' + (x.activo ? pill('Sí', 'success') : pill('No', 'neutral')) + (x.debeCambiar ? ' ' + pill('Clave temporal', 'warning', false) : '') + '</td>' +
+      '<td style="text-align:right;white-space:nowrap"><button type="button" class="btn btn-g ico" aria-label="Editar a ' + esc(x.nombre) + '" data-a="editarUsuario" data-id="' + x.id + '">' + ic('lapiz') + '</button><button type="button" class="btn btn-dg ico" aria-label="Eliminar a ' + esc(x.nombre) + '" data-a="eliminarUsuario" data-id="' + x.id + '"' + (x.id === u.id ? ' disabled title="No puedes eliminar tu propia cuenta"' : '') + '>' + ic('basura') + '</button></td></tr>';
+  });
+  return '<div class="between"><div class="stack" style="gap:2px"><h1 class="h1">Usuarios</h1><span class="sub">' + db.usuarios.length + ' usuarios · el administrador crea todas las cuentas</span></div><button type="button" class="btn btn-p" data-a="nuevoUsuario">' + ic('plus') + 'Nuevo usuario</button></div>' +
+    '<div class="row"><label class="search">' + ic('buscar') + '<input class="inp" id="a-q" type="search" placeholder="Buscar nombre o correo" aria-label="Buscar nombre o correo" data-in="adm" data-k="q" value="' + esc(st.adm.q) + '"></label>' +
+    '<select class="inp" id="a-rol" aria-label="Rol" data-in="adm" data-k="rol" style="width:auto"><option value="">Rol: todos</option>' + Object.keys(ROL).map(function (r) { return '<option value="' + r + '"' + (st.adm.rol === r ? ' selected' : '') + '>' + ROL[r] + '</option>'; }).join('') + '</select>' +
+    '<select class="inp" id="a-activo" aria-label="Activo" data-in="adm" data-k="activo" style="width:auto"><option value="">Activo: todos</option><option value="si"' + (st.adm.activo === 'si' ? ' selected' : '') + '>Activos</option><option value="no"' + (st.adm.activo === 'no' ? ' selected' : '') + '>Inactivos</option></select></div>' +
+    '<div class="card" style="overflow:hidden">' + tabla(['Nombre', 'Correo', 'Rol', 'Activo', '<span style="position:absolute;width:1px;height:1px;overflow:hidden">Acciones</span>'], filas, vacio('buscar', 'Ningún resultado con estos filtros', 'Prueba con otro nombre o rol.')) + '</div>';
+}
+
+/* Administración: catálogos */
+function usosEsp(n) { return { tec: db.tecnicos.filter(function (t) { return t.esp.indexOf(n) >= 0; }).length, cat: db.categorias.filter(function (c) { return c.esp === n; }).length }; }
+function usosCat(n) { return db.solicitudes.filter(function (s) { return s.categoria === n; }).length; }
+function accionesCat(l, i, x) { return '<td><button type="button" class="sw" role="switch" aria-checked="' + x.activo + '" aria-label="Activa: ' + esc(x.n) + '" data-a="toggleCat" data-l="' + l + '" data-i="' + i + '"></button></td><td style="text-align:right"><button type="button" class="btn btn-dg ico" aria-label="Eliminar ' + esc(x.n) + '" data-a="eliminarCat" data-l="' + l + '" data-i="' + i + '">' + ic('basura') + '</button></td>'; }
+function vCatalogos() {
+  var e = st.err, tab = st.catTab, cuerpo;
+  var tabs = '<div class="tabs" role="tablist" aria-label="Catálogos">' + [['especialidades', 'Especialidades'], ['categorias', 'Categorías'], ['prioridades', 'Prioridades y plazos']].map(function (x) { return '<button type="button" role="tab" class="tab" id="tab-' + x[0] + '" aria-selected="' + (tab === x[0]) + '" data-a="catTab" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
+  var nota = function (t) { return '<p class="sub" style="margin:0;padding:12px 16px">' + t + '</p>'; };
+  if (tab === 'especialidades') {
+    cuerpo = '<section class="card" style="overflow:hidden">' + tabla(['Especialidad', 'Técnicos', 'Categorías', 'Activa', '<span style="position:absolute;width:1px;height:1px;overflow:hidden">Acciones</span>'], db.especialidades.map(function (x, i) { var us = usosEsp(x.n); return '<tr' + (x.activo ? '' : ' class="off"') + '><td style="font-weight:500">' + esc(x.n) + '</td><td>' + us.tec + '</td><td>' + us.cat + '</td>' + accionesCat('especialidades', i, x) + '</tr>'; }), vacio('carpeta', 'Todavía no hay especialidades', 'Crea la primera: las categorías y los técnicos dependen de ellas.')) +
+      '<form data-form="especialidad" novalidate class="row" style="padding:14px 16px;border-top:1px solid var(--border);align-items:flex-start"><div class="field" style="flex:1 1 220px"><label class="lbl" for="esp-n">Nueva especialidad</label><input class="inp" id="esp-n" maxlength="' + LIM.catalogo + '" placeholder="Ej.: Seguridad electrónica"' + (e.esp ? ' aria-invalid="true" aria-describedby="esp-n-e"' : '') + '>' + (e.esp ? '<span class="err" id="esp-n-e">' + esc(e.esp) + '</span>' : '') + '</div><button type="submit" class="btn btn-s" style="margin-top:22px">' + ic('plus') + 'Agregar</button></form>' +
+      nota('Una especialidad inactiva no se ofrece al crear categorías ni técnicos; quienes ya la tienen la conservan.') + '</section>';
+  } else if (tab === 'categorias') {
+    cuerpo = '<section class="card" style="overflow:hidden">' + tabla(['Categoría', 'Especialidad requerida', 'Solicitudes', 'Activa', '<span style="position:absolute;width:1px;height:1px;overflow:hidden">Acciones</span>'], db.categorias.map(function (x, i) { return '<tr' + (x.activo ? '' : ' class="off"') + '><td style="font-weight:500">' + esc(x.n) + '</td><td>' + esc(x.esp) + '</td><td style="font-variant-numeric:tabular-nums">' + usosCat(x.n) + '</td>' + accionesCat('categorias', i, x) + '</tr>'; }), vacio('carpeta', 'Todavía no hay categorías', 'Sin categorías nadie puede registrar solicitudes.')) +
+      '<form data-form="categoria" novalidate class="row" style="padding:14px 16px;border-top:1px solid var(--border);align-items:flex-start"><div class="field" style="flex:1 1 200px"><label class="lbl" for="cat-n">Nueva categoría</label><input class="inp" id="cat-n" maxlength="' + LIM.catalogo + '" placeholder="Ej.: Seguridad"' + (e.cat ? ' aria-invalid="true" aria-describedby="cat-n-e"' : '') + '>' + (e.cat ? '<span class="err" id="cat-n-e">' + esc(e.cat) + '</span>' : '') + '</div>' +
+      '<div class="field" style="flex:1 1 180px"><label class="lbl" for="cat-esp">Especialidad requerida</label><select class="inp" id="cat-esp"' + (e.catEsp ? ' aria-invalid="true"' : '') + '><option value="">Elige una</option>' + db.especialidades.filter(function (x) { return x.activo; }).map(function (x) { return '<option>' + esc(x.n) + '</option>'; }).join('') + '</select>' + (e.catEsp ? '<span class="err">' + esc(e.catEsp) + '</span>' : '') + '</div><button type="submit" class="btn btn-s" style="margin-top:22px">' + ic('plus') + 'Agregar</button></form>' +
+      nota('Una categoría inactiva no aparece al registrar solicitudes; las existentes la conservan y se marcan "(inactiva)".') + '</section>';
+  } else {
+    cuerpo = '<form class="card" data-form="plazos" novalidate style="overflow:hidden;max-width:560px"><div class="cab"><h2 class="h2">Prioridades y plazos</h2><button type="submit" class="btn btn-p btn-sm">Guardar plazos</button></div>' +
+      '<div class="tabla-caja"><table class="tbl" style="min-width:0"><thead><tr><th>Prioridad</th><th>Plazo (horas)</th></tr></thead><tbody>' + db.prioridades.map(function (p) { return '<tr><td>' + pPrio(p.id) + '</td><td><input class="inp" id="h-' + p.id + '" type="number" min="1" max="720" step="1" value="' + p.horas + '" aria-label="Horas de ' + p.n + '" style="width:110px"' + (e.plazos ? ' aria-invalid="true"' : '') + '></td></tr>'; }).join('') + '</tbody></table></div>' + (e.plazos ? '<p class="err" role="alert" style="margin:0;padding:0 16px 14px">' + esc(e.plazos) + '</p>' : '') + nota('Los cambios de plazo afectan solo a las solicitudes nuevas.') + '</form>';
+  }
+  return '<div class="stack" style="gap:2px"><h1 class="h1">Catálogos</h1><span class="sub">Especialidades → categorías → prioridades. Lo que tiene registros relacionados no se elimina: se desactiva.</span></div>' + tabs + '<div role="tabpanel" aria-labelledby="tab-' + tab + '" class="stack">' + cuerpo + '</div>';
+}
+function vClientes() {
+  var filas = db.clientes.map(function (c) {
+    var nu = db.usuarios.filter(function (x) { return x.clienteId === c.id; }).length, ns = db.solicitudes.filter(function (x) { return x.clienteId === c.id; }).length;
+    return '<tr' + (c.activo ? '' : ' class="off"') + '><td style="font-weight:500">' + esc(c.n) + '</td><td class="mono">' + esc(c.ruc) + '</td><td>' + esc(c.sedes.join(' · ')) + '</td><td>' + nu + '</td><td>' + ns + '</td><td>' + (c.activo ? pill('Sí', 'success') : pill('No', 'neutral')) + '</td>' +
+      '<td style="text-align:right;white-space:nowrap"><button type="button" class="btn btn-g ico" aria-label="Editar ' + esc(c.n) + '" data-a="editarCliente" data-id="' + c.id + '">' + ic('lapiz') + '</button><button type="button" class="btn btn-dg ico" aria-label="Eliminar ' + esc(c.n) + '" data-a="eliminarCliente" data-id="' + c.id + '">' + ic('basura') + '</button></td></tr>';
+  });
+  return '<div class="between"><div class="stack" style="gap:2px"><h1 class="h1">Clientes y sedes</h1><span class="sub">' + db.clientes.length + ' clientes · las sedes se eligen al registrar una solicitud</span></div><button type="button" class="btn btn-p" data-a="nuevoCliente">' + ic('plus') + 'Nuevo cliente</button></div>' +
+    '<div class="card" style="overflow:hidden">' + tabla(['Cliente', 'RUC', 'Sedes', 'Usuarios', 'Solicitudes', 'Activo', '<span style="position:absolute;width:1px;height:1px;overflow:hidden">Acciones</span>'], filas, vacio('carpeta', 'Todavía no hay clientes', 'Registra el primero con al menos una sede.', '<button type="button" class="btn btn-p" style="margin-top:6px" data-a="nuevoCliente">' + ic('plus') + 'Nuevo cliente</button>')) + '</div>' +
+    '<p class="sub" style="margin:0">Un cliente inactivo no puede ingresar ni registrar solicitudes; su historial se conserva.</p>';
+}
+function vTecnicos() {
+  var filas = db.tecnicos.map(function (t) {
+    var tu = usr(t.usuarioId);
+    return '<tr' + (tu.activo ? '' : ' class="off"') + '><td style="font-weight:500">' + esc(tu.nombre) + '<br><span class="sub" style="font-weight:400">' + esc(tu.correo) + '</span></td><td>' + esc(t.esp.join(', ')) + '</td>' +
+      '<td><button type="button" class="sw" role="switch" aria-checked="' + t.disponible + '" aria-label="Disponible: ' + esc(tu.nombre) + '" data-a="disponible" data-id="' + t.id + '"' + (tu.activo ? '' : ' disabled') + '></button></td>' +
+      '<td>' + barraCarga(carga(t.id), t.max) + '</td><td>' + (tu.activo ? pill('Sí', 'success') : pill('No', 'neutral')) + '</td>' +
+      '<td style="text-align:right"><button type="button" class="btn btn-g ico" aria-label="Editar a ' + esc(tu.nombre) + '" data-a="editarTecnico" data-id="' + t.id + '">' + ic('lapiz') + '</button></td></tr>';
+  });
+  return '<div class="between"><div class="stack" style="gap:2px"><h1 class="h1">Técnicos</h1><span class="sub">Especialidades, disponibilidad y carga máxima. La cuenta y si está activo se gestionan en Usuarios.</span></div><button type="button" class="btn btn-p" data-a="nuevoTecnico">' + ic('plus') + 'Nuevo técnico</button></div>' +
+    '<div class="card" style="overflow:hidden">' + tabla(['Técnico', 'Especialidades', 'Disponible', 'Carga', 'Activo', '<span style="position:absolute;width:1px;height:1px;overflow:hidden">Acciones</span>'], filas, vacio('carga', 'Todavía no hay técnicos', 'Crea el primero; recibirá una contraseña temporal.', '<button type="button" class="btn btn-p" style="margin-top:6px" data-a="nuevoTecnico">' + ic('plus') + 'Nuevo técnico</button>')) + '</div>';
+}
+function vPerfil(u) {
+  var e = st.err;
+  return '<div class="stack" style="gap:2px"><h1 class="h1">Mi perfil</h1><span class="sub">' + ROL[u.rol] + (u.clienteId ? ' · ' + esc(cli(u.clienteId).n) : '') + '</span></div>' +
+    '<div class="dos" style="max-width:980px"><form class="card stack" style="padding:20px" data-form="perfil" novalidate><h2 class="h2">Datos</h2><dl class="datos"><div><dt>Nombre</dt><dd>' + esc(u.nombre) + '</dd></div><div><dt>Correo</dt><dd>' + esc(u.correo) + '</dd></div></dl><span class="sub">Para cambiar tu nombre o correo, pídelo al administrador.</span>' +
+      '<div class="field"><label class="lbl" for="pf-tel">Teléfono</label><input class="inp" id="pf-tel" type="tel" inputmode="tel" maxlength="10" placeholder="09XXXXXXXX" value="' + esc(u.telefono || '') + '"' + (e.tel ? ' aria-invalid="true" aria-describedby="pf-tel-e"' : '') + '>' + (e.tel ? '<span class="err" id="pf-tel-e">' + esc(e.tel) + '</span>' : '<span class="ayuda">10 dígitos. Lo usa el técnico para coordinar la visita.</span>') + '</div>' +
+      '<div class="modal-pie"><button type="submit" class="btn btn-p">Guardar teléfono</button></div></form>' +
+    '<form class="card stack" style="padding:20px" data-form="clave" novalidate><h2 class="h2">Cambiar contraseña</h2>' +
+      '<div class="field"><label class="lbl" for="pf-actual">Contraseña actual</label><input class="inp" id="pf-actual" type="password" autocomplete="current-password"' + (e.actual ? ' aria-invalid="true" aria-describedby="pf-actual-e"' : '') + '>' + (e.actual ? '<span class="err" id="pf-actual-e">' + esc(e.actual) + '</span>' : '') + '</div>' + camposClave() +
+      '<div class="modal-pie"><button type="submit" class="btn btn-p">Cambiar contraseña</button></div></form></div>';
+}
+
+/* ---------- Modales ---------- */
+function modal() {
+  var m = st.modal; if (!m) return '';
+  var e = st.err, u = yo(), cuerpo = '';
+  function inv(k) { return e[k] ? ' aria-invalid="true"' : ''; }
+  function er(k) { return e[k] ? '<span class="err">' + esc(e[k]) + '</span>' : ''; }
+  function pie(ok, extra) { return '<div class="modal-pie">' + (extra || '') + '<button type="button" class="btn btn-s" data-a="cerrarModal">Cancelar</button>' + ok + '</div>'; }
+  function cab(t, sub) { return '<div class="modal-cab"><div class="stack" style="gap:2px"><h2 class="h2" id="m-t" style="font-size:18px;line-height:24px">' + t + '</h2>' + (sub ? '<span class="sub">' + sub + '</span>' : '') + '</div><button type="button" class="btn btn-g ico" aria-label="Cerrar" data-a="cerrarModal">' + ic('x') + '</button></div>'; }
+  if (m.tipo === 'texto') {
+    var t = TRANS[m.i], s = por(db.solicitudes, st.solId), res = t.req === 'resolucion';
+    cuerpo = '<form class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" data-form="texto" novalidate>' + cab(t.btn, s.codigo + ' · ' + ESTADOS[t.de][0] + ' → ' + ESTADOS[t.a][0]) +
+      '<div class="field"><label class="lbl" for="m-texto">' + (res ? 'Resolución' : t.a === 'pendiente_info' ? 'Qué información necesitas' : t.de === 'pendiente_info' ? 'Tu respuesta' : 'Comentario') + '</label><textarea class="inp" id="m-texto" rows="4" maxlength="' + LIM.texto + '"' + (e.texto ? ' aria-invalid="true" aria-describedby="m-texto-e"' : '') + ' placeholder="' + (res ? 'Qué se hizo para resolverla' : 'Escribe el motivo') + '"></textarea>' + (e.texto ? '<span class="err" id="m-texto-e">' + esc(e.texto) + '</span>' : '<span class="ayuda">Queda en el historial con tu nombre y la hora.</span>') + '</div>' +
+      '<div class="modal-pie"><button type="button" class="btn btn-s" data-a="cerrarModal">Cancelar</button><button type="submit" class="btn ' + (t.tipo === 'dg' ? 'btn-d' : 'btn-p') + '">' + t.btn + '</button></div></form>';
+  } else if (m.tipo === 'asignar') {
+    var so = por(db.solicitudes, st.solId), re = so.estado !== 'aprobada';
+    var filas = db.tecnicos.map(function (tt) {
+      var mot = motivoNoApto(so, tt), c = carga(tt.id);
+      return '<tr' + (mot ? ' class="off"' : '') + '><td style="font-weight:500">' + esc(usr(tt.usuarioId).nombre) + '</td><td>' + esc(tt.esp.join(', ')) + '</td><td>' + (tt.disponible ? 'Sí' : 'No') + '</td><td><div class="row" style="flex-wrap:nowrap"><div class="barra" style="width:80px"><span style="width:' + Math.min(100, c / tt.max * 100) + '%;background:' + (c >= tt.max ? 'var(--danger-dot)' : 'var(--primary)') + '"></span></div><span style="white-space:nowrap">' + c + ' de ' + tt.max + '</span></div></td>' +
+        '<td>' + (mot ? pill(MOTIVO[mot], 'neutral', false) : '<label class="chk"><input type="radio" name="tec" value="' + tt.id + '"' + (m.tid === tt.id ? ' checked' : '') + '>Elegir</label>') + '</td></tr>';
+    });
+    cuerpo = '<form class="modal ancho" role="dialog" aria-modal="true" aria-labelledby="m-t" data-form="asignar" novalidate>' + cab(re ? 'Reasignar técnico' : 'Asignar técnico', '<span class="mono">' + so.codigo + '</span> · ' + esc(so.categoria) + ' requiere la especialidad ' + esc(espDe(so.categoria))) +
+      '<div style="border:1px solid var(--border);border-radius:14px;overflow:hidden">' + tabla(['Técnico', 'Especialidades', 'Disponible', 'Carga', 'Elegir'], filas) + '</div>' + (e.tecnico ? '<span class="err" role="alert">' + esc(e.tecnico) + '</span>' : '') +
+      '<div class="field"><label class="lbl" for="m-just">Justificación <span class="opt">(' + (re ? 'obligatoria al reasignar' : 'opcional') + ')</span></label><textarea class="inp" id="m-just" rows="3" maxlength="' + LIM.texto + '"' + (e.just ? ' aria-invalid="true"' : '') + '></textarea>' + (e.just ? '<span class="err">' + esc(e.just) + '</span>' : '') + '</div>' +
+      '<div class="modal-pie"><button type="button" class="btn btn-s" data-a="cerrarModal">Cancelar</button><button type="submit" class="btn btn-p">' + (re ? 'Reasignar' : 'Asignar') + '</button></div></form>';
+  } else if (m.tipo === 'usuario') {
+    var x = m.id ? usr(m.id) : null, rol = m.rol || (x ? x.rol : 'cliente');
+    cuerpo = '<form class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" data-form="usuario" novalidate>' + cab(x ? 'Editar usuario' : 'Nuevo usuario', x ? '' : 'Se genera una contraseña temporal que se muestra una sola vez.') +
+      '<div class="field"><label class="lbl" for="mu-nombre">Nombre</label><input class="inp" id="mu-nombre" maxlength="' + LIM.nombre + '" value="' + esc(x ? x.nombre : (m.nombre || '')) + '"' + inv('nombre') + '>' + er('nombre') + '</div>' +
+      '<div class="field"><label class="lbl" for="mu-correo">Correo</label><input class="inp" id="mu-correo" type="email" maxlength="' + LIM.correo + '" value="' + esc(x ? x.correo : (m.correo || '')) + '"' + inv('correo') + '>' + er('correo') + '</div>' +
+      '<div class="field"><label class="lbl" for="mu-rol">Rol</label><select class="inp" id="mu-rol" data-in="rolModal"' + (x ? ' disabled' : '') + '>' + Object.keys(ROL).map(function (r) { return '<option value="' + r + '"' + (r === rol ? ' selected' : '') + '>' + ROL[r] + '</option>'; }).join('') + '</select>' + (x ? '<span class="ayuda">El rol no se cambia; crea otro usuario si hace falta.</span>' : '') + '</div>' +
+      (rol === 'cliente' && !x ? '<div class="field"><label class="lbl" for="mu-cliente">Cliente</label><select class="inp" id="mu-cliente">' + db.clientes.filter(function (c) { return c.activo; }).map(function (c) { return '<option value="' + c.id + '">' + esc(c.n) + '</option>'; }).join('') + '</select></div>' : '') +
+      (rol === 'tecnico' ? '<fieldset class="field" style="border:0;padding:0;margin:0"><legend class="lbl" style="margin-bottom:6px">Especialidades</legend><div class="row">' + db.especialidades.filter(function (c) { return c.activo; }).map(function (c, i) { var t2 = x && tec(x.tecnicoId); return '<label class="chk"><input type="checkbox" name="esp" value="' + esc(c.n) + '"' + (t2 && t2.esp.indexOf(c.n) >= 0 ? ' checked' : '') + '>' + esc(c.n) + '</label>'; }).join('') + '</div>' + er('esp') + '</fieldset>' : '') +
+      (x ? '<label class="chk"><input type="checkbox" id="mu-activo"' + (x.activo ? ' checked' : '') + (x.id === u.id ? ' disabled' : '') + '>Activo</label>' : '') +
+      '<div class="modal-pie">' + (x ? '<button type="button" class="btn btn-g" style="margin-right:auto" data-a="restablecer" data-id="' + x.id + '">Restablecer contraseña</button>' : '') + '<button type="button" class="btn btn-s" data-a="cerrarModal">Cancelar</button><button type="submit" class="btn btn-p">Guardar</button></div></form>';
+  } else if (m.tipo === 'clave') {
+    cuerpo = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t">' + cab('Contraseña temporal', 'Para ' + esc(usr(m.id).nombre) + ' · ' + esc(usr(m.id).correo)) +
+      '<div class="clave">' + esc(m.clave) + '</div><p class="sub" style="margin:0">Entrégasela por su canal habitual. Se muestra una sola vez; al entrar deberá cambiarla.</p>' +
+      '<div class="modal-pie"><button type="button" class="btn btn-s" data-a="copiar" data-t="' + esc(m.clave) + '">Copiar</button><button type="button" class="btn btn-p" data-a="cerrarModal">Listo</button></div></div>';
+  } else if (m.tipo === 'noEliminar') {
+    var o = entidad(m);
+    cuerpo = '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="m-t" aria-describedby="m-d">' + cab('No se puede eliminar') + '<p style="margin:0" class="muted" id="m-d">' + esc(o.n) + ' ' + o.rel + ', por eso no se puede eliminar. Puedes desactivarlo: deja de usarse en registros nuevos y lo existente lo conserva.</p>' +
+      pie('<button type="button" class="btn btn-d" data-a="desactivar"' + (o.activo ? '' : ' disabled') + '>' + (o.activo ? 'Desactivar' : 'Ya está inactivo') + '</button>') + '</div>';
+  } else if (m.tipo === 'eliminar') {
+    cuerpo = '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="m-t" aria-describedby="m-d">' + cab('Eliminar ' + esc(entidad(m).n)) + '<p style="margin:0" class="muted" id="m-d">No tiene registros relacionados. Esta acción no se puede deshacer.</p>' +
+      pie('<button type="button" class="btn btn-d" data-a="confirmarEliminar">Eliminar</button>') + '</div>';
+  } else if (m.tipo === 'descartar') {
+    cuerpo = '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="m-t" aria-describedby="m-d">' + cab('¿Descartar la solicitud?') + '<p style="margin:0" class="muted" id="m-d">Lo que escribiste en Nueva solicitud se perderá.</p>' +
+      '<div class="modal-pie"><button type="button" class="btn btn-s" data-a="cerrarModal">Seguir editando</button><button type="button" class="btn btn-d" data-a="descartar">Descartar</button></div></div>';
+  } else if (m.tipo === 'cliente') {
+    var cx = m.id ? cli(m.id) : null;
+    if (!m.sedes) m.sedes = cx ? cx.sedes.slice() : [];
+    cuerpo = '<form class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" data-form="cliente" novalidate>' + cab(cx ? 'Editar cliente' : 'Nuevo cliente', 'Las sedes se ofrecen al registrar una solicitud.') +
+      '<div class="field"><label class="lbl" for="mc-nombre">Razón social</label><input class="inp" id="mc-nombre" maxlength="' + LIM.nombre + '" value="' + esc(cx ? cx.n : '') + '"' + inv('nombre') + '>' + er('nombre') + '</div>' +
+      '<div class="field"><label class="lbl" for="mc-ruc">RUC</label><input class="inp mono" id="mc-ruc" inputmode="numeric" maxlength="13" placeholder="13 dígitos" value="' + esc(cx ? cx.ruc : '') + '"' + inv('ruc') + '>' + er('ruc') + '</div>' +
+      '<fieldset class="field" style="border:0;padding:0;margin:0"><legend class="lbl" style="margin-bottom:6px">Sedes</legend>' +
+        (m.sedes.length ? m.sedes.map(function (sd, i) { var usada = cx && db.solicitudes.some(function (x) { return x.clienteId === cx.id && x.sede === sd; }); return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;min-height:32px"><span>' + esc(sd) + '</span>' + (usada ? '<span class="sub">Tiene solicitudes: no se quita</span>' : '<button type="button" class="btn btn-g btn-sm" data-a="quitarSede" data-i="' + i + '" aria-label="Quitar la sede ' + esc(sd) + '">Quitar</button>') + '</div>'; }).join('') : '<span class="sub">Aún no hay sedes.</span>') +
+        '<div class="row" style="flex-wrap:nowrap;margin-top:6px"><input class="inp" id="mc-sede" maxlength="' + LIM.sede + '" placeholder="Nueva sede, ej.: Sucursal Sur" aria-label="Nueva sede"' + inv('sede') + '><button type="button" class="btn btn-s" data-a="agregarSede">' + ic('plus', 14) + 'Agregar</button></div>' + er('sede') + '</fieldset>' +
+      (cx ? '<label class="chk"><input type="checkbox" id="mc-activo"' + (cx.activo ? ' checked' : '') + '>Activo · si lo desactivas, sus usuarios no podrán ingresar</label>' : '') +
+      pie('<button type="submit" class="btn btn-p">Guardar</button>') + '</form>';
+  } else if (m.tipo === 'tecnico') {
+    var tt = tec(m.id), tu = usr(tt.usuarioId), cc = carga(tt.id);
+    cuerpo = '<form class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" data-form="tecnico" novalidate>' + cab('Editar técnico', esc(tu.nombre) + ' · ' + esc(tu.correo)) +
+      '<fieldset class="field" style="border:0;padding:0;margin:0"><legend class="lbl" style="margin-bottom:6px">Especialidades</legend><div class="row">' + db.especialidades.filter(function (x) { return x.activo || tt.esp.indexOf(x.n) >= 0; }).map(function (x) { return '<label class="chk"><input type="checkbox" name="esp" value="' + esc(x.n) + '"' + (tt.esp.indexOf(x.n) >= 0 ? ' checked' : '') + '>' + esc(x.n) + (x.activo ? '' : ' <span class="sub">(inactiva)</span>') + '</label>'; }).join('') + '</div>' + er('esp') + '</fieldset>' +
+      '<label class="chk"><input type="checkbox" id="mt-disp"' + (tt.disponible ? ' checked' : '') + (tu.activo ? '' : ' disabled') + '>Disponible para recibir asignaciones</label>' +
+      '<div class="field"><label class="lbl" for="mt-max">Carga máxima</label><input class="inp" id="mt-max" type="number" min="1" max="20" step="1" value="' + tt.max + '" style="width:110px"' + inv('max') + '>' + (e.max ? er('max') : '<span class="ayuda">Solicitudes activas a la vez. Hoy tiene ' + cc + '.</span>') + '</div>' +
+      pie('<button type="submit" class="btn btn-p">Guardar</button>') + '</form>';
+  } else if (m.tipo === 'reiniciar') {
+    cuerpo = '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="m-t">' + cab('Reiniciar datos de prueba') + '<p style="margin:0" class="muted">Se borran los cambios que hiciste en este navegador y vuelven las solicitudes y usuarios de ejemplo. Se cierra la sesión.</p>' +
+      '<div class="modal-pie"><button type="button" class="btn btn-s" data-a="cerrarModal">Cancelar</button><button type="button" class="btn btn-d" data-a="confirmarReinicio">Reiniciar</button></div></div>';
+  }
+  return '<div class="modal-velo" data-a="fondoModal">' + cuerpo + '</div>';
+}
+function toast() { return st.toast ? '<div class="toast" role="status">' + ic('check') + esc(st.toast) + '</div>' : ''; }
+var tToast;
+function avisar(t) { st.toast = t; clearTimeout(tToast); tToast = setTimeout(function () { st.toast = null; render(); }, 3200); }
+
+/* ---------- Render ---------- */
+var app = document.getElementById('app');
+var TITULOS = { inicio: 'Inicio', solicitudes: 'Solicitudes', nueva: 'Solicitudes / <b>Nueva</b>', carga: 'Carga de técnicos', dashboard: 'Dashboard', notificaciones: 'Notificaciones', perfil: 'Mi perfil', usuarios: 'Administración / <b>Usuarios</b>', clientes: 'Administración / <b>Clientes y sedes</b>', tecnicos: 'Administración / <b>Técnicos</b>', catalogos: 'Administración / <b>Catálogos</b>' };
+function banner() { var b = st.banner; return b ? '<div class="alerta ' + b.tono + ' aviso" role="' + (b.tono === 'mal' ? 'alert' : 'status') + '"><span class="row" style="flex-wrap:nowrap;gap:8px">' + ic('alerta') + '<span>' + esc(b.t) + '</span></span><button type="button" class="btn btn-g ico" style="width:24px;height:24px;color:inherit;flex:none" aria-label="Cerrar aviso" data-a="cerrarAviso">' + ic('x', 14) + '</button></div>' : ''; }
+// Panel solo de la demo para provocar cada caso de docs/ux/08-errores-y-estados.md
+function simPanel() {
+  var s = st.sim, u = yo();
+  function chk(k, t) { return '<label class="chk"><input type="checkbox" data-in="sim" data-k="' + k + '"' + (s[k] ? ' checked' : '') + '>' + t + '</label>'; }
+  function b(a, t) { return '<button type="button" class="btn btn-g btn-sm" data-a="' + a + '"' + (u ? '' : ' disabled') + '>' + t + '</button>'; }
+  return '<div class="sim">' + (s.abierto ? '<div class="card sim-panel" role="dialog" aria-label="Simular errores"><span class="lbl">Simular (solo en la demo)</span>' +
+    chk('lento', 'Red lenta: esqueletos y "Guardando…"') + chk('offline', 'Sin conexión') + chk('fallo', 'Error 500 en la próxima acción') + chk('conflicto', 'Conflicto 409 en el próximo cambio') + chk('falloCarga', 'Falla la carga de la próxima pantalla') +
+    '<span class="lbl muted" style="margin-top:6px">Ahora mismo' + (u ? '' : ' (ingresa primero)') + '</span>' + b('simVencida', 'Vencer la sesión (401)') + b('sim403', 'Abrir una ruta sin permiso (403)') + b('sim404', 'Abrir una solicitud que no existe (404)') + b('simDesactivar', 'Desactivar mi cuenta') + '</div>' : '') +
+    '<button type="button" class="btn btn-s" data-a="sim" aria-expanded="' + s.abierto + '">' + ic('alerta', 14) + 'Simular</button></div>';
+}
+// Conserva lo escrito en campos que no vienen del estado (data-in) cuando se vuelve a pintar
+function camposLibres() { return [].slice.call(app.querySelectorAll('input,textarea,select')).filter(function (el) { return el.type !== 'file' && !el.dataset.in; }); }
+function llaveCampo(el) { return el.id || (el.name ? el.name + '=' + el.value : ''); }
+function capturar() { var v = {}; camposLibres().forEach(function (el) { var k = llaveCampo(el); if (k) v[k] = /checkbox|radio/.test(el.type) ? el.checked : el.value; }); return v; }
+function restaurar(v) { camposLibres().forEach(function (el) { var k = llaveCampo(el); if (k in v) { if (/checkbox|radio/.test(el.type)) el.checked = v[k]; else el.value = v[k]; } }); }
+function render() {
+  var foco = document.activeElement, fid = foco && foco.id, ini = null, fin = null;
+  try { if (fid && foco.selectionStart != null) { ini = foco.selectionStart; fin = foco.selectionEnd; } } catch (e) { /* inputs sin selección */ }
+  var valores = st.limpiar ? {} : capturar(); st.limpiar = false;
+  var u = yo(), html, emp = u && u.clienteId ? cli(u.clienteId) : null;
+  if (u && (!u.activo || (u.clienteId && !(emp && emp.activo)))) { aviso(u.activo ? 'Tu empresa no está activa en ServiGest. Habla con el administrador.' : ERR.CUENTA_INACTIVA); st.uid = null; u = null; st.pub = 'login'; st.modal = null; }
+  if (!u) html = ({ login: vLogin, recuperar: vRecuperar, restablecer: vRestablecer }[st.pub] || vLogin)();
+  else if (u.debeCambiar) html = vPrimerAcceso(u);
+  else {
+    if (!permitida(u, st.vista)) st.vista = 'inicio';
+    var v = st.vista, titulo = TITULOS[v] || '';
+    if (v === 'solicitudes') titulo = menuDe(u)[1][1];
+    if (v === 'detalle') { var s = por(db.solicitudes, st.solId); titulo = menuDe(u)[1][1] + ' / <b class="mono">' + (s ? s.codigo : '') + '</b>'; }
+    var cuerpo = st.errorCarga ? errorCarga() : st.cargando ? esqueleto() : { inicio: vInicio, solicitudes: vSolicitudes, nueva: vNueva, detalle: vDetalle, carga: vCarga, dashboard: vDashboard, notificaciones: vNotificaciones, perfil: vPerfil, usuarios: vUsuarios, clientes: vClientes, tecnicos: vTecnicos, catalogos: vCatalogos }[v](u);
+    html = shell(u, titulo, cuerpo);
+  }
+  app.innerHTML = html + modal() + toast() + banner() + simPanel();
+  restaurar(valores);
+  // Al cerrarse un modal, el foco vuelve al botón que lo abrió
+  if (!st.modal && st.opener) { var o = app.querySelector(st.opener); st.opener = null; if (o) { o.focus(); fid = null; } }
+  if (fid) { var el = document.getElementById(fid); if (el) { el.focus(); try { if (ini != null) el.setSelectionRange(ini, fin); } catch (e) { /* tipo sin selección */ } } }
+  if (st.guardando && st.guardandoSel) { var g = app.querySelector(st.guardandoSel); if (g) { g.disabled = true; g.textContent = 'Guardando…'; } }
+  guardar();
+}
+function enfocarModal() { var el = app.querySelector('.modal input:not([type=hidden]):not(:disabled), .modal textarea, .modal select, .modal button.btn-p, .modal button.btn-d'); if (el) el.focus(); }
+function firma(el) {
+  if (!el || !el.dataset || !el.dataset.a) return null;
+  var s = '[data-a="' + el.dataset.a + '"]';
+  ['id', 'i', 'v', 'l'].forEach(function (k) { if (el.dataset[k] != null) s += '[data-' + k + '="' + el.dataset[k] + '"]'; });
+  return s;
+}
+function abrirModal(m) { if (!st.modal) st.opener = firma(document.activeElement); st.modal = m; st.err = {}; render(); enfocarModal(); }
+// Toda escritura pasa por aquí: sin doble envío, "Guardando…", sin conexión y error 500 simulados
+function enviar(el, hacer) {
+  if (st.guardando) return;
+  if (st.sim.offline) { aviso(ERR.SIN_CONEXION); return render(); }
+  var btn = el.tagName === 'FORM' ? el.querySelector('[type=submit]') : el;
+  st.guardando = true; st.guardandoSel = el.tagName === 'FORM' ? '[data-form="' + el.dataset.form + '"] [type=submit]' : null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+  setTimeout(function () {
+    st.guardando = false; st.guardandoSel = null;
+    if (st.sim.fallo) { st.sim.fallo = false; aviso(ERR.ERROR_INTERNO); return render(); }
+    hacer(el);
+    if (Object.keys(st.err).some(function (k) { return st.err[k]; })) { var f = app.querySelector('[aria-invalid="true"]'); if (f) f.focus(); }
+  }, st.sim.lento ? 1500 : 250);
+}
+function entidad(m) {
+  if (m.ent === 'usuario') { var x = usr(m.id); return { n: x.nombre, activo: x.activo, rel: 'tiene solicitudes relacionadas', off: function () { x.activo = false; }, del: function () { db.usuarios = db.usuarios.filter(function (y) { return y !== x; }); if (x.tecnicoId) db.tecnicos = db.tecnicos.filter(function (t) { return t.id !== x.tecnicoId; }); } }; }
+  if (m.ent === 'cliente') { var c = cli(m.id); return { n: c.n, activo: c.activo, rel: 'tiene usuarios o solicitudes', off: function () { c.activo = false; }, del: function () { db.clientes = db.clientes.filter(function (y) { return y !== c; }); } }; }
+  var it = db[m.l][m.i];
+  return { n: it.n, activo: it.activo, rel: m.l === 'categorias' ? 'tiene solicitudes que la usan' : 'la usan técnicos o categorías', off: function () { it.activo = false; }, del: function () { db[m.l].splice(m.i, 1); } };
+}
+function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+/* ---------- Acciones ---------- */
+var A = {
+  rellenar: function (el) { st.loginCorreo = el.dataset.correo; st.loginPass = el.dataset.pass; st.err = {}; render(); document.getElementById('l-pass').focus(); },
+  pub: function (el) { st.pub = el.dataset.v; st.err = {}; st.loginOk = ''; st.banner = null; if (st.pub === 'recuperar') st.recEnviado = false; render(); },
+  enlaceVencido: function () { if (db.token) db.token.vence = Date.now() - 1; st.pub = 'restablecer'; render(); },
+  cerrarAviso: function () { st.banner = null; render(); },
+  campana: function () { st.campana = !st.campana; st.menuYo = false; render(); },
+  paso: function (el) { var f = JSON.parse(el.dataset.f); if (Object.keys(f).length) st.filtros = Object.assign(limpio(), f); ir(el.dataset.v); },
+  reintentar: function () { st.errorCarga = false; ir(st.vista); },
+  catTab: function (el) { st.catTab = el.dataset.v; st.err = {}; render(); },
+  dashTodo: function () { st.dash = { cat: '', tec: '', cli: '', periodo: '' }; render(); },
+  descartar: function () { var m = st.modal; st.modal = null; st.borrador = null; if (m.v === '__salir') return A.salir(); ir(m.v, Object.assign({}, m.extra, { forzar: true })); },
+  sim: function () { st.sim.abierto = !st.sim.abierto; render(); },
+  simVencida: function () { st.volver = { uid: st.uid, vista: st.vista, solId: st.solId }; st.uid = null; st.pub = 'login'; st.modal = null; st.sim.abierto = false; aviso(ERR.NO_AUTENTICADO, 'info'); render(); },
+  sim403: function () { st.sim.abierto = false; ir(yo().rol === 'administrador' ? 'nueva' : 'usuarios'); },
+  sim404: function () { st.sim.abierto = false; ir('detalle', { solId: 's999' }); },
+  simDesactivar: function () { yo().activo = false; st.sim.abierto = false; render(); },
+  toggleCat: function (el) { enviar(el, function () { var x = db[el.dataset.l][+el.dataset.i]; x.activo = !x.activo; avisar(x.n + (x.activo ? ' activada' : ' desactivada')); render(); }); },
+  eliminarCat: function (el) { var l = el.dataset.l, i = +el.dataset.i, x = db[l][i], usos = l === 'categorias' ? usosCat(x.n) : usosEsp(x.n).tec + usosEsp(x.n).cat; abrirModal({ tipo: usos ? 'noEliminar' : 'eliminar', ent: 'cat', l: l, i: i }); },
+  nuevoCliente: function () { abrirModal({ tipo: 'cliente' }); },
+  editarCliente: function (el) { abrirModal({ tipo: 'cliente', id: el.dataset.id }); },
+  eliminarCliente: function (el) { var id = el.dataset.id, rel = db.usuarios.some(function (x) { return x.clienteId === id; }) || db.solicitudes.some(function (x) { return x.clienteId === id; }); abrirModal({ tipo: rel ? 'noEliminar' : 'eliminar', ent: 'cliente', id: id }); },
+  agregarSede: function () {
+    var m = st.modal, v = val('mc-sede').trim(); st.err = {};
+    if (!v) st.err.sede = 'Escribe el nombre de la sede.';
+    else if (m.sedes.some(function (x) { return x.toLowerCase() === v.toLowerCase(); })) st.err.sede = 'Esa sede ya está en la lista.';
+    else m.sedes.push(v);
+    render(); var i = document.getElementById('mc-sede'); if (i) { if (!st.err.sede) i.value = ''; i.focus(); }
+  },
+  quitarSede: function (el) { st.modal.sedes.splice(+el.dataset.i, 1); render(); },
+  nuevoTecnico: function () { abrirModal({ tipo: 'usuario', rol: 'tecnico' }); },
+  editarTecnico: function (el) { abrirModal({ tipo: 'tecnico', id: el.dataset.id }); },
+  reiniciar: function () { abrirModal({ tipo: 'reiniciar' }); },
+  confirmarReinicio: function () { db = semilla(); st.uid = null; st.modal = null; st.vista = 'inicio'; st.pub = 'login'; st.banner = null; st.filtros = limpio(); st.loginCorreo = ''; st.loginPass = ''; avisar('Datos de prueba restaurados'); render(); },
+  salir: function () { if (st.vista === 'nueva' && sucio(st.borrador) && !st.modal) return abrirModal({ tipo: 'descartar', v: '__salir' }); st.borrador = null; st.pub = 'login'; st.uid = null; st.menuYo = false; st.vista = 'inicio'; st.filtros = limpio(); st.loginPass = ''; st.err = {}; render(); },
+  ir: function (el) { ir(el.dataset.v); },
+  abrirMenu: function () { st.menu = true; render(); },
+  cerrarMenu: function () { st.menu = false; render(); },
+  menuYo: function () { st.menuYo = !st.menuYo; st.campana = false; render(); },
+  abrir: function (el) { ir('detalle', { solId: el.dataset.id }); },
+  kpi: function (el) { st.filtros = Object.assign(limpio(), JSON.parse(el.dataset.f)); ir('solicitudes'); },
+  limpiar: function () { st.filtros = limpio(); st.pagina = 1; render(); },
+  pagina: function (el) { st.pagina = +el.dataset.p; render(); },
+  ocultarPasos: function () { yo().hechos.ocultoPasos = true; render(); },
+  quitarAdj: function (el) { st.borrador.adjuntos.splice(+el.dataset.i, 1); render(); },
+  transicion: function (el) {
+    var t = TRANS[+el.dataset.i], s = por(db.solicitudes, st.solId);
+    if (t.req) return abrirModal({ tipo: 'texto', i: +el.dataset.i });
+    enviar(el, function () {
+      if (st.sim.conflicto) { st.sim.conflicto = false; aviso(ERR.CONFLICTO_VERSION); return render(); }
+      if (!puede(t, s, yo())) { aviso(ERR.TRANSICION_INVALIDA); return render(); }
+      var err = cambiarEstado(s, t, '');
+      if (err) { aviso(err); return render(); }
+      yo().hechos.cambio = true; avisar(s.codigo + ': ' + ESTADOS[t.a][0].toLowerCase()); render();
+    });
+  },
+  modalAsignar: function () { abrirModal({ tipo: 'asignar' }); },
+  cerrarModal: function () { st.modal = null; st.err = {}; render(); },
+  fondoModal: function (el, ev) { if (ev.target === el) A.cerrarModal(); },
+  disponible: function (el) { enviar(el, function () { var t = tec(el.dataset.id); t.disponible = !t.disponible; avisar(usr(t.usuarioId).nombre + (t.disponible ? ' está disponible' : ' ya no está disponible')); render(); }); },
+  leerTodas: function () { var u = yo(); db.notificaciones.forEach(function (n) { if (n.uid === u.id) n.leida = true; }); render(); },
+  abrirNoti: function (el) { var n = por(db.notificaciones, el.dataset.id); n.leida = true; ir('detalle', { solId: n.sid }); },
+  nuevoUsuario: function () { abrirModal({ tipo: 'usuario' }); },
+  editarUsuario: function (el) { abrirModal({ tipo: 'usuario', id: el.dataset.id }); },
+  eliminarUsuario: function (el) { var x = usr(el.dataset.id); abrirModal({ tipo: relaciones(x) ? 'noEliminar' : 'eliminar', ent: 'usuario', id: x.id }); },
+  desactivar: function (el) { enviar(el, function () { var o = entidad(st.modal); o.off(); st.modal = null; avisar(o.n + ' quedó inactivo'); render(); }); },
+  confirmarEliminar: function (el) { enviar(el, function () { var o = entidad(st.modal); o.del(); st.modal = null; avisar(o.n + ' fue eliminado'); render(); }); },
+  restablecer: function (el) { var x = usr(el.dataset.id), c = clave(); x.pass = c; x.debeCambiar = true; abrirModal({ tipo: 'clave', id: x.id, clave: c }); },
+  copiar: function (el) {
+    var t = el.dataset.t;
+    try { navigator.clipboard.writeText(t).then(function () { avisar('Contraseña copiada'); render(); }, function () { avisar('Selecciona la contraseña y cópiala'); render(); }); }
+    catch (e) { avisar('Selecciona la contraseña y cópiala'); render(); }
+  }
+};
+function clave() { var L = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz', N = '23456789', c = ''; for (var i = 0; i < 6; i++) c += L[Math.floor(Math.random() * L.length)]; return c + N[Math.floor(Math.random() * N.length)] + N[Math.floor(Math.random() * N.length)]; }
+var CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/* ---------- Formularios ---------- */
+var F = {
+  login: function () {
+    var correo = val('l-correo').trim().toLowerCase(), pass = val('l-pass');
+    st.loginCorreo = correo; st.loginPass = '';
+    if (!correo || !pass) { st.err = { login: 'Escribe tu correo y tu contraseña.' }; return render(); }
+    var u = db.usuarios.find(function (x) { return x.correo === correo; });
+    st.loginOk = '';
+    if (!u || u.pass !== pass) { st.err = { login: ERR.CREDENCIALES_INVALIDAS }; st.limpiar = true; return render(); }
+    if (!u.activo) { st.err = { login: ERR.CUENTA_INACTIVA }; st.limpiar = true; return render(); }
+    if (u.clienteId && !cli(u.clienteId).activo) { st.err = { login: 'Tu empresa no está activa en ServiGest. Habla con el administrador.' }; st.limpiar = true; return render(); }
+    st.uid = u.id; st.err = {}; st.banner = null; st.vista = 'inicio'; st.filtros = limpio(); st.loginCorreo = '';
+    // Después de una sesión vencida, vuelve a la misma pantalla
+    if (st.volver && st.volver.uid === u.id) { st.vista = st.volver.vista; st.solId = st.volver.solId; avisar('Sesión renovada: sigues donde estabas'); }
+    st.volver = null; render();
+  },
+  recuperar: function () {
+    var correo = val('r-correo').trim().toLowerCase(); st.err = {};
+    if (!CORREO.test(correo)) { st.err.correo = 'Escribe un correo válido, como nombre@empresa.com.'; return render(); }
+    var x = db.usuarios.find(function (y) { return y.correo === correo && y.activo; });
+    db.token = x ? { uid: x.id, vence: Date.now() + 30 * 6e4, usado: false } : null;
+    st.recEnviado = true; render();
+  },
+  restablecer: function () {
+    if (!tokenValido()) return render();
+    var x = usr(db.token.uid), r = reglaClave(val('p1'), val('p2'), x.pass);
+    st.err = r || {}; if (r) return render();
+    x.pass = val('p1'); x.debeCambiar = false; db.token.usado = true;
+    st.pub = 'login'; st.loginCorreo = x.correo; st.loginOk = 'Contraseña actualizada. Ya puedes ingresar.'; st.limpiar = true; render();
+  },
+  primer: function () {
+    var u = yo(), p1 = val('p1'), p2 = val('p2'); st.err = {};
+    var r = reglaClave(p1, p2, u.pass); if (r) { st.err = r; return render(); }
+    u.pass = p1; u.debeCambiar = false; st.vista = 'inicio'; avisar('Contraseña guardada. Bienvenida a ServiGest'); render();
+  },
+  nueva: function () {
+    var u = yo(), b = st.borrador; st.err = {};
+    if (!b.categoria) st.err.categoria = 'Elige una categoría.';
+    else if (!(catDe(b.categoria) && catDe(b.categoria).activo)) st.err.categoria = 'Esa categoría ya no está disponible. Elige otra.';
+    if (!cli(b.clienteId).activo) st.err.categoria = 'El cliente elegido está inactivo.';
+    if (!b.descripcion.trim()) st.err.descripcion = 'La descripción es obligatoria';
+    else if (b.descripcion.trim().length < 10) st.err.descripcion = 'Cuenta un poco más: mínimo 10 caracteres.';
+    if (Object.keys(st.err).length) return render();
+    db.seq.sol++;
+    var p = prio(b.prioridad), ahora = Date.now();
+    var s = { id: 's' + db.seq.sol, codigo: 'SOL-2026-' + String(db.seq.sol).padStart(6, '0'), clienteId: b.clienteId, sede: b.sede, categoria: b.categoria, prioridad: b.prioridad, equipo: b.equipo.trim(), descripcion: b.descripcion.trim(), estado: 'registrada', tecnicoId: null, creada: ahora, limite: ahora + p.horas * H, resueltaEn: null, resolucion: '', adjuntos: b.adjuntos.slice(), creadoPor: u.id, historial: [{ de: null, a: 'registrada', quien: u.id, cuando: ahora, nota: u.rol === 'coordinador' ? 'Registrada por el coordinador en nombre del cliente' : '' }] };
+    db.solicitudes.push(s);
+    notificar(coordinadores(), 'Nueva solicitud ' + s.codigo + ' de ' + cli(s.clienteId).n, s.id);
+    if (u.rol === 'coordinador') notificar(usuariosCliente(s.clienteId), 'Se registró ' + s.codigo + ' a nombre de tu empresa', s.id);
+    st.borrador = null; avisar('Solicitud ' + s.codigo + ' registrada'); ir('detalle', { solId: s.id });
+  },
+  texto: function () {
+    var t = TRANS[st.modal.i], s = por(db.solicitudes, st.solId), texto = val('m-texto').trim();
+    if (texto.length < 5) { st.err = { texto: texto ? 'Escribe al menos 5 caracteres.' : (t.req === 'resolucion' ? 'Describe la resolución para poder resolver.' : 'Escribe un comentario para continuar.') }; return render(); }
+    if (st.sim.conflicto) { st.sim.conflicto = false; st.err = {}; aviso(ERR.CONFLICTO_VERSION); return render(); }
+    if (!puede(t, s, yo())) { st.modal = null; aviso(ERR.TRANSICION_INVALIDA); return render(); }
+    cambiarEstado(s, t, texto); yo().hechos.cambio = true; st.modal = null; st.err = {};
+    avisar(s.codigo + ': ' + ESTADOS[t.a][0].toLowerCase()); render();
+  },
+  asignar: function () {
+    var s = por(db.solicitudes, st.solId), r = app.querySelector('input[name="tec"]:checked'), tid = r ? r.value : '', just = val('m-just');
+    if (st.sim.conflicto) { st.sim.conflicto = false; st.err = {}; aviso(ERR.CONFLICTO_VERSION); return render(); }
+    var e = asignar(s, tid, just);
+    if (e) { st.err = {}; st.err[e.campo] = e.msg; st.modal.tid = tid; return render(); }
+    yo().hechos.asigno = true; st.modal = null; st.err = {}; avisar(s.codigo + ' asignada a ' + nomTec(tid)); render();
+  },
+  usuario: function () {
+    var m = st.modal, x = m.id ? usr(m.id) : null, rol = x ? x.rol : val('mu-rol');
+    var nombre = val('mu-nombre').trim(), correo = val('mu-correo').trim().toLowerCase();
+    var esp = [].slice.call(app.querySelectorAll('input[name="esp"]:checked')).map(function (i) { return i.value; });
+    st.err = {};
+    if (nombre.length < 3) st.err.nombre = 'Escribe el nombre completo.';
+    if (!CORREO.test(correo)) st.err.correo = 'Escribe un correo válido, como nombre@empresa.com.';
+    else if (existeCorreo(correo, x)) st.err.correo = 'Ya existe un usuario con este correo';
+    if (rol === 'tecnico' && !esp.length) st.err.esp = 'Elige al menos una especialidad.';
+    if (Object.keys(st.err).length) { m.nombre = nombre; m.correo = correo; m.rol = rol; render(); return; }
+    if (x) {
+      x.nombre = nombre; x.correo = correo;
+      var act = document.getElementById('mu-activo'); if (act && !act.disabled) x.activo = act.checked;
+      if (x.tecnicoId) tec(x.tecnicoId).esp = esp;
+      st.modal = null; avisar('Cambios guardados'); return render();
+    }
+    var nuevo = { id: 'u' + (++db.seq.usuario), nombre: nombre, correo: correo, rol: rol, activo: true, pass: clave(), debeCambiar: true, nuevo: true, hechos: {}, telefono: '' };
+    if (rol === 'cliente') nuevo.clienteId = val('mu-cliente');
+    if (rol === 'tecnico') { var t = { id: 't' + (++db.seq.tecnico), usuarioId: nuevo.id, esp: esp, disponible: true, max: 5 }; db.tecnicos.push(t); nuevo.tecnicoId = t.id; }
+    db.usuarios.push(nuevo);
+    abrirModal({ tipo: 'clave', id: nuevo.id, clave: nuevo.pass });
+  },
+  perfil: function () {
+    var tel = val('pf-tel').replace(/\s/g, '');
+    if (!/^0\d{9}$/.test(tel)) { st.err = { tel: 'Escribe 10 dígitos empezando por 0.' }; return render(); }
+    yo().telefono = tel; st.err = {}; avisar('Teléfono guardado'); render();
+  },
+  clave: function () {
+    var u = yo(); st.err = {};
+    if (val('pf-actual') !== u.pass) st.err = { actual: 'La contraseña actual no es correcta.' };
+    else st.err = reglaClave(val('p1'), val('p2'), u.pass) || {};
+    if (Object.keys(st.err).length) return render();
+    u.pass = val('p1'); st.limpiar = true; avisar('Contraseña cambiada'); render();
+  },
+  cliente: function () {
+    var m = st.modal, x = m.id ? cli(m.id) : null, n = val('mc-nombre').trim(), ruc = val('mc-ruc').trim();
+    st.err = {};
+    if (n.length < 3) st.err.nombre = 'Escribe la razón social.';
+    if (!/^\d{13}$/.test(ruc)) st.err.ruc = 'El RUC tiene 13 dígitos, sin guiones.';
+    else if (db.clientes.some(function (c) { return c.ruc === ruc && c !== x; })) st.err.ruc = 'Ya existe un cliente con este RUC';
+    if (val('mc-sede').trim()) st.err.sede = 'Escribiste una sede sin agregarla: pulsa Agregar o bórrala.';
+    else if (!m.sedes.length) st.err.sede = 'Agrega al menos una sede.';
+    if (Object.keys(st.err).length) return render();
+    if (!x) { db.seq.cliente = (db.seq.cliente || 10) + 1; x = { id: 'c' + db.seq.cliente, activo: true }; db.clientes.push(x); }
+    x.n = n; x.ruc = ruc; x.sedes = m.sedes.slice();
+    var act = document.getElementById('mc-activo'); if (act) x.activo = act.checked;
+    st.modal = null; avisar('Cliente ' + n + ' guardado'); render();
+  },
+  tecnico: function () {
+    var t = tec(st.modal.id), esp = [].slice.call(app.querySelectorAll('input[name="esp"]:checked')).map(function (i) { return i.value; }), max = +val('mt-max'), c = carga(t.id);
+    st.err = {};
+    if (!esp.length) st.err.esp = 'Elige al menos una especialidad.';
+    if (!(max >= 1 && max <= 20) || max % 1) st.err.max = 'Escribe un número entero entre 1 y 20.';
+    else if (max < c) st.err.max = 'No puede ser menor que sus ' + c + ' solicitudes activas. Reasigna primero.';
+    if (Object.keys(st.err).length) return render();
+    t.esp = esp; t.max = max; var d = document.getElementById('mt-disp'); if (d && !d.disabled) t.disponible = d.checked;
+    st.modal = null; avisar('Técnico ' + usr(t.usuarioId).nombre + ' guardado'); render();
+  },
+  especialidad: function () {
+    var n = val('esp-n').trim();
+    if (n.length < 3) { st.err = { esp: 'Escribe un nombre de al menos 3 letras.' }; return render(); }
+    if (db.especialidades.some(function (c) { return c.n.toLowerCase() === n.toLowerCase(); })) { st.err = { esp: 'Esa especialidad ya existe.' }; return render(); }
+    db.especialidades.push({ n: n, activo: true }); st.err = {}; st.limpiar = true; avisar('Especialidad ' + n + ' agregada'); render();
+  },
+  plazos: function () {
+    var nuevos = {}, mal = false;
+    db.prioridades.forEach(function (p) { var h = +val('h-' + p.id); if (!(h >= 1 && h <= 720) || h % 1) mal = true; nuevos[p.id] = h; });
+    if (mal) { st.err = { plazos: 'Cada plazo debe ser un número entero entre 1 y 720 horas.' }; return render(); }
+    db.prioridades.forEach(function (p) { p.horas = nuevos[p.id]; }); st.err = {}; avisar('Plazos guardados. Aplican a solicitudes nuevas'); render();
+  },
+  categoria: function () {
+    var n = val('cat-n').trim();
+    var esp = val('cat-esp'); st.err = {};
+    if (n.length < 3) st.err.cat = 'Escribe un nombre de al menos 3 letras.';
+    else if (db.categorias.some(function (c) { return c.n.toLowerCase() === n.toLowerCase(); })) st.err.cat = 'Esa categoría ya existe.';
+    if (!esp) st.err.catEsp = 'Elige la especialidad que atiende esta categoría.';
+    if (Object.keys(st.err).length) return render();
+    db.categorias.push({ n: n, esp: esp, activo: true }); st.limpiar = true; avisar('Categoría ' + n + ' agregada'); render();
+  }
+};
+
+/* ---------- Eventos ---------- */
+app.addEventListener('click', function (ev) {
+  var el = ev.target.closest('[data-a]');
+  if (!el || el.disabled) return;
+  // Una fila clicable no debe disparar si se hizo clic en un control dentro de ella
+  if (el.tagName === 'TR' && ev.target.closest('button,a,input,select,label') ) return;
+  var a = A[el.dataset.a]; if (a) { a(el, ev); }
+});
+app.addEventListener('submit', function (ev) { ev.preventDefault(); var f = F[ev.target.dataset.form]; if (f) enviar(ev.target, f); });
+app.addEventListener('input', function (ev) {
+  var el = ev.target, tipo = el.dataset.in;
+  if (tipo === 'filtro' && el.tagName === 'INPUT') { st.filtros[el.dataset.k] = el.value; st.pagina = 1; render(); }
+  if (tipo === 'adm' && el.tagName === 'INPUT') { st.adm.q = el.value; render(); }
+  if (tipo === 'borrador' && !el.dataset.re) { st.borrador[el.dataset.k] = el.value; }
+  if (tipo === 'borrador' && el.dataset.k === 'descripcion') { var c = document.getElementById('ns-desc-cnt'); if (c) c.textContent = el.value.length + ' / ' + LIM.descripcion; }
+});
+app.addEventListener('change', function (ev) {
+  var el = ev.target, tipo = el.dataset.in;
+  if (tipo === 'filtro' && el.tagName === 'SELECT') { st.filtros[el.dataset.k] = el.value; st.pagina = 1; render(); }
+  if (tipo === 'adm' && el.tagName === 'SELECT') { st.adm[el.dataset.k] = el.value; render(); }
+  if (tipo === 'sim') { st.sim[el.dataset.k] = el.checked; if (el.dataset.k === 'offline' && !el.checked) avisar('Conexión restablecida'); render(); }
+  if (tipo === 'dash') { st.dash[el.dataset.k] = el.value; render(); }
+  if (tipo === 'borrador') {
+    st.borrador[el.dataset.k] = el.value;
+    if (el.dataset.k === 'clienteId') st.borrador.sede = cli(el.value).sedes[0];
+    if (el.dataset.re) render();
+  }
+  if (tipo === 'rolModal') { st.modal.rol = el.value; st.modal.nombre = val('mu-nombre'); st.modal.correo = val('mu-correo'); render(); }
+  if (tipo === 'adjuntos') {
+    st.err.adjuntos = '';
+    [].slice.call(el.files).forEach(function (f) {
+      var adj = st.borrador.adjuntos;
+      if (adj.length >= 5) st.err.adjuntos = 'Máximo 5 archivos por solicitud: ' + f.name + ' no se agregó.';
+      else if (adj.some(function (a) { return a.n === f.name; })) st.err.adjuntos = f.name + ' ya está adjunto.';
+      else if (!/\.(pdf|jpe?g|png)$/i.test(f.name)) st.err.adjuntos = f.name + ' no es PDF, JPG ni PNG.';
+      else if (f.size > 5 * 1048576) st.err.adjuntos = f.name + ' pesa más de 5 MB.';
+      else st.borrador.adjuntos.push({ n: f.name, t: (f.size / 1048576).toFixed(1).replace('.', ',') + ' MB' });
+    });
+    el.value = '';
+    render();
+  }
+});
+document.addEventListener('keydown', function (ev) {
+  // El foco no sale del modal con Tab
+  if (ev.key === 'Tab' && st.modal) {
+    var f = [].slice.call(app.querySelectorAll('.modal button:not(:disabled), .modal input:not(:disabled), .modal select:not(:disabled), .modal textarea:not(:disabled)'));
+    if (!f.length) return;
+    var a = f[0], z = f[f.length - 1], act = document.activeElement;
+    if (!act || !act.closest('.modal')) { ev.preventDefault(); a.focus(); }
+    else if (ev.shiftKey && act === a) { ev.preventDefault(); z.focus(); }
+    else if (!ev.shiftKey && act === z) { ev.preventDefault(); a.focus(); }
+    return;
+  }
+  if (ev.key !== 'Escape') return;
+  if (st.modal) A.cerrarModal(); else if (st.menuYo || st.menu || st.campana || st.sim.abierto) { st.menuYo = false; st.menu = false; st.campana = false; st.sim.abierto = false; render(); }
+});
+// Avisar antes de cerrar la pestaña con una solicitud a medio escribir
+window.addEventListener('beforeunload', function (ev) { if (st.vista === 'nueva' && sucio(st.borrador)) { ev.preventDefault(); ev.returnValue = ''; } });
+// Otra pestaña cambió los datos: se vuelve a pintar con lo nuevo
+window.addEventListener('storage', function (ev) { if (ev.key !== KEY || !ev.newValue) return; try { db = JSON.parse(ev.newValue); ultimo = ev.newValue; } catch (e) { return; } if (!st.modal && !st.guardando) render(); });
+window.addEventListener('offline', function () { st.sim.offline = true; render(); });
+window.addEventListener('online', function () { st.sim.offline = false; avisar('Conexión restablecida'); render(); });
+// Arrastrar archivos a la zona de adjuntos
+app.addEventListener('dragover', function (ev) { if (ev.target.closest('.zona')) ev.preventDefault(); });
+app.addEventListener('drop', function (ev) {
+  var z = ev.target.closest('.zona'); if (!z) return; ev.preventDefault();
+  var inp = document.getElementById('ns-adjuntos'); if (!inp || !ev.dataTransfer) return;
+  try { inp.files = ev.dataTransfer.files; inp.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { /* navegador sin soporte */ }
+});
+// El plazo avanza solo: refresca cada minuto si no hay un modal abierto ni se está escribiendo
+setInterval(function () { var a = document.activeElement; if (!st.modal && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) render(); }, 60000);
+
+function autoprueba() {
+  var copia = db, uid = st.uid, ok = 0, mal = 0;
+  function t(c, m) { if (c) ok++; else { mal++; console.error('Autoprueba falló: ' + m); } }
+  db = semilla(); st.uid = 'u2';
+  var S = function (id) { return por(db.solicitudes, id); }, ahora = Date.now();
+  TRANS.forEach(function (x) { t(ESTADOS[x.de] && ESTADOS[x.a], 'transición con estado desconocido ' + x.de + ' → ' + x.a); });
+  t(!puede(TRANS[0], S('s125'), usr('u8')), 'el cliente no aprueba');
+  t(puede(TRANS[0], S('s125'), usr('u2')), 'el coordinador aprueba una registrada');
+  t(!TRANS.some(function (x) { return x.de === 'asignada' && x.a === 'resuelta'; }), 'no se salta de asignada a resuelta');
+  t(plazo({ estado: 'en_proceso', creada: ahora - H, limite: ahora + 10 * H }).k === 'a_tiempo', 'plazo a tiempo');
+  t(plazo({ estado: 'en_proceso', creada: ahora - 9 * H, limite: ahora + 0.5 * H }).k === 'por_vencer', 'plazo por vencer (menos del 20 %)');
+  t(plazo({ estado: 'en_proceso', creada: ahora - 9 * H, limite: ahora - H }).k === 'vencida', 'plazo vencido');
+  var clim = S('s124');
+  t(motivoNoApto(clim, tec('t1')) === 'TECNICO_SIN_ESPECIALIDAD', 'técnico sin la especialidad');
+  t(motivoNoApto(clim, tec('t5')) === 'TECNICO_NO_DISPONIBLE', 'técnico no disponible');
+  t(motivoNoApto(clim, tec('t4')) === 'TECNICO_CARGA_MAXIMA', 'técnico con carga máxima');
+  t(motivoNoApto({ categoria: 'Cableado estructurado' }, tec('t1')) === '', 'la categoría exige su especialidad (Redes)');
+  t(asignar(S('s123'), 't6', '').msg === ERR.JUSTIFICACION_REQUERIDA, 'reasignar sin justificación');
+  t(asignar(clim, 't3', '') === null && clim.estado === 'asignada', 'asignación válida');
+  t(cambiarEstado({ estado: 'resuelta', resolucion: '', historial: [] }, TRANS[7], '') === ERR.RESOLUCION_REQUERIDA, 'no se cierra sin resolución');
+  t(existeCorreo('ana.torres@andina.ec') && !existeCorreo('nadie@ejemplo.ec'), 'correo duplicado');
+  t(reglaClave('corta1', 'corta1') && reglaClave('largaSinNumero', 'largaSinNumero') && reglaClave('Clave1234', 'Otra1234').p2 && !reglaClave('Clave1234', 'Clave1234'), 'reglas de contraseña');
+  ['VALIDACION', 'CREDENCIALES_INVALIDAS', 'CAMBIO_PASSWORD_REQUERIDO', 'TRANSICION_INVALIDA', 'CONFLICTO_VERSION', 'EN_USO', 'DUPLICADO', 'RESOLUCION_REQUERIDA', 'TECNICO_SIN_ESPECIALIDAD', 'TECNICO_NO_DISPONIBLE', 'TECNICO_CARGA_MAXIMA', 'JUSTIFICACION_REQUERIDA'].forEach(function (c) { t(!!ERR[c], 'falta el mensaje de ' + c); });
+  db = copia; st.uid = uid;
+  console.log('Autoprueba: ' + ok + ' bien, ' + mal + ' mal');
+  return { ok: ok, mal: mal };
+}
+// Lo usan la autoprueba y la exportación de pantallas
+window.SG = { st: st, A: A, F: F, ir: ir, render: render, abrirModal: abrirModal, semilla: semilla, autoprueba: autoprueba, db: function (d) { if (d) db = d; return db; } };
+cargar();
+render();
+if (location.hash === '#autoprueba') autoprueba();
+})();
+</script>

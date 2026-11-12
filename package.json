@@ -1,0 +1,28 @@
+{
+  "name": "servigest",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "migrate": "npm run migrate -w backend",
+    "lint": "eslint .",
+    "typecheck": "npm run typecheck -w frontend",
+    "test": "npm run test:unit && npm run test:int && npm run test:front",
+    "test:unit": "npm run test:unit -w backend",
+    "test:int": "npm run test:int -w backend",
+    "test:front": "npm test -w frontend",
+    "test:e2e": "npm run test:e2e -w frontend"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.72.2"
+  }
+}

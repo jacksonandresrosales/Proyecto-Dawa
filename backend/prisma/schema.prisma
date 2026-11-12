@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Primer modelo, para que migraciones y pruebas tengan algo real.
+// El resto del esquema está diseñado en docs/tecnico/02-modelo-datos.md (tarea T-01).
+model Rol {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(20)
+
+  @@map("roles")
+}
