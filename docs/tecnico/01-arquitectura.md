@@ -54,8 +54,7 @@ servigest/
 │  │  └─ routes/         definición de rutas y ProtectedRoute
 │  └─ e2e/               pruebas Playwright
 ├─ docs/
-├─ docker-compose.yml    PostgreSQL de desarrollo y de pruebas
-└─ .github/workflows/    CI
+└─ docker-compose.yml    PostgreSQL de desarrollo y de pruebas
 ```
 
 ## Stack y justificación

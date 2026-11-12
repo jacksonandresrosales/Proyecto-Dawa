@@ -64,14 +64,12 @@ backend/     API Express: routes → controllers → services → repositories �
 frontend/    React + TypeScript: pages, components (ui = shadcn), hooks, api
 docs/ux/       Roles, sitemap, flujos, wireframes, componentes
 docs/tecnico/  Arquitectura, modelo de datos, reglas, API, seguridad, backlog
-.github/     CI y plantilla de PR
 ```
 
 ## Documentación
 
 - Diseño UX: [docs/ux/README.md](docs/ux/README.md)
 - Documento técnico: [docs/tecnico/README.md](docs/tecnico/README.md)
-- Cómo colaborar: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Equipo
 

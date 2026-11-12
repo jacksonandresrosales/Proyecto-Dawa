@@ -65,7 +65,7 @@ Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (i
 | 4 | REST, JSON, códigos HTTP, errores centralizados, paginación, filtros | `04-api.md` |
 | 4 | PostgreSQL con claves, restricciones, índices, migraciones | `02-modelo-datos.md` |
 | 4 | Hash, autenticación, roles, secretos | `05-seguridad.md` |
-| 4 | Git con aportes verificables; configuración por ambiente | `CONTRIBUTING.md`, `01-arquitectura.md` |
+| 4 | Git con aportes verificables; configuración por ambiente | `01-arquitectura.md` |
 | 4 | OpenAPI y guía de ejecución | T-12, `README.md` |
 | 5.1 | Autenticación, cierre de sesión, restablecimiento, perfiles, 4 roles | HU-01–04, `05-seguridad.md` |
 | 5.2 | CRUD con duplicidad, integridad, vigencia, restricción al eliminar | HU-40–43, `02-modelo-datos.md` |
