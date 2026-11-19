@@ -32,6 +32,17 @@ Copiar `backend/.env.example` a `backend/.env` y `frontend/.env.example` a `fron
 npm run migrate
 ```
 
+Configura un `JWT_SECRET` aleatorio de al menos 32 caracteres en
+`backend/.env`. Inicia backend y frontend; en la primera visita a
+`http://localhost:5173/login`, usa **Primera vez: crear administrador inicial**
+para crear la cuenta y entrar. Esa configuración solo funciona mientras no
+exista ningún administrador. Después, las cuentas restantes las crea el admin
+desde la aplicación. No hay registro público.
+
+Como alternativa para entornos controlados, `npm run seed` crea los roles; si
+se definen `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD`, también crea la
+cuenta inicial.
+
 ```bash
 npm run dev:backend
 ```
@@ -42,6 +53,8 @@ npm run dev:frontend
 
 - API: http://localhost:3000/api/health
 - Aplicación: http://localhost:5173
+- Inicio de sesión: http://localhost:5173/login
+- Configuración inicial: http://localhost:5173/configurar
 
 ## Pruebas y calidad
 

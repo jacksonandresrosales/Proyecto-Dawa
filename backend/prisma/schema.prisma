@@ -7,11 +7,117 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Primer modelo, para que migraciones y pruebas tengan algo real.
-// El resto del esquema está diseñado en docs/tecnico/02-modelo-datos.md (tarea T-01).
 model Rol {
-  id     Int    @id @default(autoincrement())
-  nombre String @unique @db.VarChar(20)
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique @db.VarChar(20)
+  usuarios Usuario[]
 
   @@map("roles")
+}
+
+model Usuario {
+  id                  Int      @id @default(autoincrement())
+  rolId               Int      @map("rol_id")
+  nombre              String   @db.VarChar(120)
+  email               String   @unique @db.VarChar(160)
+  passwordHash        String   @map("password_hash") @db.VarChar(100)
+  debeCambiarPassword Boolean  @default(true) @map("debe_cambiar_password")
+  telefono            String?  @db.VarChar(20)
+  activo              Boolean  @default(true)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  rol                 Rol      @relation(fields: [rolId], references: [id], onDelete: Restrict)
+  cliente             Cliente?
+  tecnico             Tecnico?
+  restablecimientos   PasswordReset[]
+
+  @@map("usuarios")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @map("usuario_id")
+  tokenHash String   @unique @map("token_hash") @db.Char(64)
+  expiraAt  DateTime @map("expira_at") @db.Timestamptz(6)
+  usado     Boolean  @default(false)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+
+  @@index([usuarioId, usado, expiraAt])
+  @@map("password_resets")
+}
+
+model Cliente {
+  id          Int     @id @default(autoincrement())
+  usuarioId   Int     @unique @map("usuario_id")
+  razonSocial String  @map("razon_social") @db.VarChar(160)
+  ruc         String  @unique @db.Char(13)
+  activo      Boolean @default(true)
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  sedes       Sede[]
+
+  @@map("clientes")
+}
+
+model Sede {
+  id        Int     @id @default(autoincrement())
+  clienteId Int     @map("cliente_id")
+  nombre    String  @db.VarChar(120)
+  direccion String  @db.VarChar(200)
+  activo    Boolean @default(true)
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+
+  @@unique([clienteId, nombre])
+  @@index([clienteId])
+  @@map("sedes")
+}
+
+model Tecnico {
+  id             Int                   @id @default(autoincrement())
+  usuarioId      Int                   @unique @map("usuario_id")
+  disponible     Boolean               @default(true)
+  cargaMax       Int                   @default(5) @map("carga_max")
+  usuario        Usuario               @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  especialidades TecnicoEspecialidad[]
+
+  @@map("tecnicos")
+}
+
+model Especialidad {
+  id         Int                   @id @default(autoincrement())
+  nombre     String                @unique @db.VarChar(80)
+  activo     Boolean               @default(true)
+  tecnicos   TecnicoEspecialidad[]
+  categorias Categoria[]
+
+  @@map("especialidades")
+}
+
+model TecnicoEspecialidad {
+  tecnicoId      Int          @map("tecnico_id")
+  especialidadId Int          @map("especialidad_id")
+  tecnico        Tecnico      @relation(fields: [tecnicoId], references: [id], onDelete: Restrict)
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id], onDelete: Restrict)
+
+  @@id([tecnicoId, especialidadId])
+  @@index([especialidadId])
+  @@map("tecnico_especialidad")
+}
+
+model Categoria {
+  id             Int          @id @default(autoincrement())
+  nombre         String       @unique @db.VarChar(80)
+  especialidadId Int          @map("especialidad_id")
+  activo         Boolean      @default(true)
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id], onDelete: Restrict)
+
+  @@index([especialidadId])
+  @@map("categorias")
+}
+
+model Prioridad {
+  id       Int     @id @default(autoincrement())
+  nombre   String  @unique @db.VarChar(20)
+  horasSla Int     @map("horas_sla")
+  activo   Boolean @default(true)
+
+  @@map("prioridades")
 }

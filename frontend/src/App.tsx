@@ -1,17 +1,48 @@
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from '@/auth/AuthContext';
+import { PublicOnlyRoute, RequirePasswordChanged, RequireRoles, RequireUser } from '@/auth/ProtectedRoute';
+import AppShell from '@/components/AppShell';
+import AdminPage from '@/pages/AdminPage';
+import { ForgotPasswordPage, InitialSetupPage, LoginPage, PasswordChangePage, ProfilePage, ResetPasswordPage } from '@/pages/AuthPages';
+import HomePage from '@/pages/HomePage';
+import UsuariosPage from '@/pages/UsuariosPage';
 
-// Punto de partida. Las rutas y pantallas se agregan según docs/ux/02-sitemap.md (semana 3).
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<PublicOnlyRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/configurar" element={<InitialSetupPage />} />
+        <Route path="/recuperar" element={<ForgotPasswordPage />} />
+        <Route path="/restablecer" element={<ResetPasswordPage />} />
+      </Route>
+      <Route element={<RequireUser />}>
+        <Route path="/primer-acceso" element={<PasswordChangePage />} />
+        <Route element={<RequirePasswordChanged />}>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Navigate to="/inicio" replace />} />
+            <Route path="/inicio" element={<HomePage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
+            <Route element={<RequireRoles roles={['admin', 'coordinador']} />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
+            <Route element={<RequireRoles roles={['admin']} />}>
+              <Route path="/admin/usuarios" element={<UsuariosPage />} />
+            </Route>
+          </Route>
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
-    <main className="mx-auto max-w-md p-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <h1>ServiGest</h1>
-          </CardTitle>
-          <CardDescription>Gestión de solicitudes de servicio técnico.</CardDescription>
-        </CardHeader>
-      </Card>
-    </main>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

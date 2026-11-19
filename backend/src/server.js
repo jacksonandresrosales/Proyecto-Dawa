@@ -1,4 +1,5 @@
 import { app } from './app.js';
+import { validateEnvironment } from './config/env.js';
 
-const port = process.env.PORT || 3000;
+const { PORT: port } = validateEnvironment();
 app.listen(port, () => console.log(`API en http://localhost:${port}/api`));

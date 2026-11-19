@@ -4,7 +4,7 @@ Base: `/api`. Formato JSON. Este documento es la base del archivo `backend/opena
 
 ## Convenciones
 
-- **Autenticación**: cabecera `Authorization: Bearer <token>` en todo salvo `login`, `forgot` y `reset`.
+- **Autenticación**: cabecera `Authorization: Bearer <token>` en todo salvo `setup-status`, `setup`, `login`, `forgot` y `reset`.
 - **Listas**: `?page=1&limit=10` (máximo 100), más filtros y `?sort=campo` o `?sort=-campo`.
 
 ```json
@@ -38,12 +38,20 @@ Roles: **A** admin, **C** coordinador, **T** técnico, **L** cliente.
 ### Autenticación
 | Método | Ruta | Roles | Descripción |
 |---|---|---|---|
-| POST | `/auth/login` | público | Inicia sesión; devuelve token, usuario y `debeCambiarPassword` |
+| GET | `/auth/setup-status` | público | Indica si falta crear el primer administrador |
+| POST | `/auth/setup` | público, una sola vez | Crea al primer administrador solo si aún no existe ninguno; devuelve JWT e inicia sesión |
+| POST | `/auth/login` | público | Inicia sesión con correo y contraseña; error genérico para credenciales inválidas |
 | POST | `/auth/logout` | todos | Cierra sesión |
 | GET | `/auth/me` | todos | Usuario actual |
-| PATCH | `/auth/me` | todos | Edita perfil y contraseña; cambiar la contraseña apaga `debeCambiarPassword` |
+| PATCH | `/auth/me` | todos | Edita nombre/teléfono; cambio de contraseña requiere la actual, salvo primer acceso |
 | POST | `/auth/forgot` | público | Genera token de restablecimiento; siempre responde 200 |
 | POST | `/auth/reset` | público | Cambia la contraseña con un token válido |
+
+`POST /usuarios` (solo A) crea cuentas de administrador o coordinador con contraseña temporal generada; devuelve el valor una sola vez. Las cuentas cliente/técnico se crean desde sus perfiles y también reciben contraseña temporal. `GET /usuarios` admite `page`, `limit`, `q`, `rol` y `activo`; `PATCH /usuarios/:id` actualiza datos, rol permitido y vigencia; `DELETE /usuarios/:id` desactiva sin borrar; `POST /usuarios/:id/restablecer-password` genera una nueva contraseña temporal. Un administrador no puede desactivar su propia cuenta ni cambiar el rol de una cuenta vinculada a un perfil.
+
+No existe auto-registro público. `/auth/setup` solo se habilita en desarrollo y permite crear el primer administrador; el backend serializa la operación y la rechaza con `409 CONFIGURACION_COMPLETADA` si otro administrador ya fue creado. En producción se usa el seed.
+
+Con `debeCambiarPassword: true`, solo se permiten `GET/PATCH /auth/me` y `POST /auth/logout`. Al completar el cambio inicial se libera el acceso.
 
 ### Solicitudes
 | Método | Ruta | Roles | Descripción |
@@ -60,17 +68,45 @@ Roles: **A** admin, **C** coordinador, **T** técnico, **L** cliente.
 
 ### Catálogos y administración
 CRUD con la misma forma: `GET /` (lista paginada, `?q`, `?activo`), `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id` (409 `EN_USO` si tiene registros relacionados; usar `PATCH` con `activo: false`). `POST` y `PATCH` responden 409 `DUPLICADO` con `details: [{ campo, mensaje }]` si el correo, el RUC o el nombre ya existe.
+La comparación de nombres de catálogos no distingue mayúsculas; los nombres repetidos se rechazan también a nivel de base de datos.
 
 | Recurso | Escritura | Lectura |
 |---|---|---|
 | `/usuarios` | A | A |
-| `/clientes` y `/clientes/:id/sedes` | A | A C (L solo sus sedes) |
-| `/tecnicos` | A | A C |
-| `/especialidades` | A | A C |
-| `/categorias` | A | todos |
-| `/prioridades` | A | todos |
+| `/clientes` y `/clientes/:id/sedes` | A C | A C (L solo sus sedes) |
+| `/tecnicos` | A C | A C |
+| `/especialidades` | A C | A C |
+| `/categorias` | A C | todos |
+| `/prioridades` | A C | todos |
 
 `GET /tecnicos/carga` (A C): técnicos con su carga actual y solicitudes activas.
+
+### Administración: filtros y carga útil
+
+Las listas de clientes, técnicos y catálogos admiten `page`, `limit`, `q` y `activo`.
+Los endpoints de escritura de este módulo son accesibles para administrador y
+coordinador por decisión del equipo. Todos requieren JWT.
+
+```text
+GET|POST                 /clientes
+GET|PATCH|DELETE         /clientes/:id
+GET|POST                 /tecnicos
+GET|PATCH|DELETE         /tecnicos/:id
+GET|POST                 /especialidades
+GET|PATCH|DELETE         /especialidades/:id
+GET|POST                 /categorias
+GET|PATCH|DELETE         /categorias/:id
+GET|POST                 /prioridades
+GET|PATCH|DELETE         /prioridades/:id
+```
+
+Al crear un cliente se envían `nombre`, `email`, `telefono`
+(opcional), `razonSocial`, `ruc` y al menos una `sede` con `nombre` y
+`direccion`; el backend genera una contraseña temporal de un solo uso. Al crear un técnico se envían sus datos de usuario,
+`especialidadIds`, `disponible` y `cargaMax` (1 a 20). Las categorías incluyen
+`especialidadId`; las prioridades incluyen `horasSla` positiva. Las bajas se
+realizan con `PATCH { "activo": false }`; `DELETE` responde `409 EN_USO` si
+hay relaciones que impiden el borrado.
 
 ### Notificaciones
 | Método | Ruta | Roles | Descripción |

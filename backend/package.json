@@ -6,14 +6,24 @@
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "migrate": "prisma migrate dev",
+    "seed": "prisma db seed",
     "postinstall": "prisma generate",
     "test": "npm run test:unit && npm run test:int",
     "test:unit": "vitest run",
     "test:int": "vitest run -c vitest.int.config.js"
   },
+  "prisma": {
+    "seed": "node --env-file-if-exists=.env prisma/seed.js"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
-    "express": "^5.3.0"
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.3.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "prisma": "^6.19.3",

@@ -10,6 +10,7 @@
     "dev:backend": "npm run dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
     "migrate": "npm run migrate -w backend",
+    "seed": "npm run seed -w backend",
     "lint": "eslint .",
     "typecheck": "npm run typecheck -w frontend",
     "test": "npm run test:unit && npm run test:int && npm run test:front",

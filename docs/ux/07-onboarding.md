@@ -1,22 +1,26 @@
 # Onboarding
 
-No hay registro público: el administrador crea cada cuenta. El onboarding es, por eso, **primer acceso + primeros pasos por rol + estados vacíos que enseñan**. No hay tour con globos ni videos: cada paso lleva a una pantalla real.
+No hay auto-registro público. Si la instalación todavía no tiene administrador, `/configurar` permite crear solo esa primera cuenta y entrar inmediatamente; después, el administrador crea las demás cuentas. El onboarding es, por eso, **primer acceso + primeros pasos por rol + estados vacíos que enseñan**. No hay tour con globos ni videos: cada paso lleva a una pantalla real.
 
 ## 1. Flujo
 
 ```mermaid
 flowchart TD
-  A([Admin crea la cuenta]) --> B[El sistema genera una contraseña temporal<br/>y la muestra una sola vez al admin]
-  B --> C[El admin la entrega al usuario<br/>por su canal habitual]
-  C --> D[/login/]
-  D --> E{¿debe_cambiar_password?}
-  E -- Sí --> F[/primer-acceso: bienvenida + nueva contraseña/]
-  F --> G{¿Contraseña válida?}
-  G -- No --> F
-  G -- Sí --> H[/inicio con tarjeta Primeros pasos/]
-  E -- No --> I[/inicio/]
-  H --> J{¿Completó o cerró<br/>los primeros pasos?}
-  J -- Sí --> I
+  A{¿Existe un administrador?} -- No --> B[/configurar/]
+  B --> C[Se crea el primer administrador<br/>y se inicia sesión]
+  A -- Sí --> D[Admin crea una cuenta]
+  D --> E[El sistema genera una contraseña temporal<br/>y la muestra una sola vez al admin]
+  E --> F[El admin la entrega al usuario<br/>por su canal habitual]
+  F --> G[/login/]
+  G --> H{¿debe_cambiar_password?}
+  H -- Sí --> I[/primer-acceso: bienvenida + nueva contraseña/]
+  I --> J{¿Contraseña válida?}
+  J -- No --> I
+  J -- Sí --> K[/inicio con tarjeta Primeros pasos/]
+  H -- No --> L[/inicio/]
+  C --> L
+  K --> M{¿Completó o cerró<br/>los primeros pasos?}
+  M -- Sí --> L
 ```
 
 - Mientras `debe_cambiar_password` sea verdadero, el servidor rechaza todo con 403 `CAMBIO_PASSWORD_REQUERIDO` excepto `GET/PATCH /auth/me` y `POST /auth/logout`. El frontend redirige a `/primer-acceso`, pero quien protege es el servidor.
