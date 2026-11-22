@@ -64,8 +64,9 @@ describe('autenticación y usuarios', () => {
     expect(setup).toBeTruthy();
     expect(rejectedSetup.body.error.code).toBe('CONFIGURACION_COMPLETADA');
     expect(setup.body.data.token).toEqual(expect.any(String));
+    // Las dos peticiones compiten: cualquiera puede ganar, pero solo una.
+    expect(['owner@security.test', 'other-owner@security.test']).toContain(setup.body.data.usuario.email);
     expect(setup.body.data.usuario).toMatchObject({
-      email: 'owner@security.test',
       rol: 'admin',
       debeCambiarPassword: false,
     });
