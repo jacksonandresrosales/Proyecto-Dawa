@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+export const API_BASE_URL =(import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
 const TOKEN_STORAGE_KEY = 'servigest_token';
 
 export type ApiList<T> = {

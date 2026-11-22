@@ -10,6 +10,7 @@ import { tecnicosRouter } from './routes/tecnicosRoutes.js';
 import { categoriasRouter, especialidadesRouter, prioridadesRouter } from './routes/catalogosRoutes.js';
 import { usuariosRouter } from './routes/usuariosRoutes.js';
 import { solicitudesRouter } from './routes/solicitudesRoutes.js';
+import { notificacionesRouter } from './routes/notificacionesRoutes.js';
 
 // La app se exporta sin escuchar un puerto para poder probarla con Supertest.
 export const app = express();
@@ -36,6 +37,7 @@ app.use('/api/especialidades', especialidadesRouter);
 app.use('/api/categorias', categoriasRouter);
 app.use('/api/prioridades', prioridadesRouter);
 app.use('/api/solicitudes', solicitudesRouter);
+app.use('/api/notificaciones', notificacionesRouter);
 
 app.use((req, res, next) => next(new AppError(404, 'NO_ENCONTRADO', 'Ruta no encontrada')));
 app.use(errorHandler);

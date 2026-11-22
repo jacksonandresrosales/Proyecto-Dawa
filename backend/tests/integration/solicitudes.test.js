@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { app } from '../../src/app.js';
 import { api } from '../helpers/api.js';
 import { limpiarBase, prisma } from '../helpers/db.js';
 
@@ -133,5 +134,50 @@ describe('solicitudes', () => {
     expect((await api().get(`/api/solicitudes/${body.data.id}`).set(bearer('tecnico'))).status).toBe(404);
     expect((await cambiar(body.data.id, 'tecnico', { estado: 'en_proceso', version: 1 })).status).toBe(404);
     expect((await api().post('/api/solicitudes').set(bearer('tecnico')).send(nueva(ids.sedeA))).status).toBe(403);
+  });
+});
+
+describe('notificaciones', () => {
+  it('lista solo las propias, cuenta las no leídas y permite marcarlas', async () => {
+    const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
+    await cambiar(body.data.id, 'coordinador', { estado: 'aprobada', version: 1 });
+
+    const delCoordinador = await api().get('/api/notificaciones').set(bearer('coordinador'));
+    expect(delCoordinador.body.data).toEqual([expect.objectContaining({ tipo: 'registro', solicitudId: body.data.id, leida: false })]);
+
+    const delCliente = await api().get('/api/notificaciones?leida=false').set(bearer('clienteA'));
+    expect(delCliente.body.meta.noLeidas).toBe(1);
+    const [aviso] = delCliente.body.data;
+    expect(aviso).toMatchObject({ tipo: 'cambio_estado', solicitudId: body.data.id });
+
+    // Una notificación ajena se trata como inexistente.
+    expect((await api().patch(`/api/notificaciones/${aviso.id}/leida`).set(bearer('coordinador'))).status).toBe(404);
+    expect((await api().patch(`/api/notificaciones/${aviso.id}/leida`).set(bearer('clienteA'))).status).toBe(204);
+    expect((await api().get('/api/notificaciones').set(bearer('clienteA'))).body.meta.noLeidas).toBe(0);
+
+    const todas = await api().patch('/api/notificaciones/leidas').set(bearer('coordinador'));
+    expect(todas.body.data.actualizadas).toBe(1);
+  });
+
+  it('envía el aviso en vivo por SSE sin recargar', async () => {
+    const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
+    const server = app.listen(0);
+    const { port } = server.address();
+    const corte = new AbortController();
+    try {
+      const respuesta = await fetch(`http://127.0.0.1:${port}/api/notificaciones/stream`, { headers: bearer('clienteA'), signal: corte.signal });
+      expect(respuesta.headers.get('content-type')).toContain('text/event-stream');
+      const lector = respuesta.body.getReader();
+      const decoder = new TextDecoder();
+      let texto = decoder.decode((await lector.read()).value); // ": conectado"
+
+      await cambiar(body.data.id, 'coordinador', { estado: 'aprobada', version: 1 });
+      while (!texto.includes('event: notificacion')) texto += decoder.decode((await lector.read()).value);
+      const datos = JSON.parse(texto.split('event: notificacion\ndata: ')[1].split('\n')[0]);
+      expect(datos).toMatchObject({ tipo: 'cambio_estado', solicitudId: body.data.id });
+    } finally {
+      corte.abort();
+      server.close();
+    }
   });
 });

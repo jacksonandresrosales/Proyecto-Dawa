@@ -6,6 +6,8 @@ import {
   type EventoHistorial, type Solicitud, type TecnicoOpcion,
 } from '@/api/solicitudes';
 import { useAuth } from '@/auth/AuthContext';
+import type { AvisoEnVivo } from '@/api/notificaciones';
+import { EVENTO_NOTIFICACION } from '@/components/Campana';
 import Modal from '@/components/Modal';
 import Pildora from '@/components/Pildora';
 import { Button } from '@/components/ui/button';
@@ -44,6 +46,13 @@ export default function SolicitudDetallePage() {
   }, [id]);
 
   useEffect(() => { queueMicrotask(() => { void cargar(); }); }, [cargar]);
+
+  // Si otra persona cambia esta solicitud, el aviso SSE la recarga sin que el usuario refresque.
+  useEffect(() => {
+    const alAviso = (e: Event) => { if ((e as CustomEvent<AvisoEnVivo>).detail.solicitudId === id) void cargar(); };
+    window.addEventListener(EVENTO_NOTIFICACION, alAviso);
+    return () => window.removeEventListener(EVENTO_NOTIFICACION, alAviso);
+  }, [cargar, id]);
 
   async function ejecutar(objetivo: Accion, contenido?: string) {
     if (!solicitud) return;

@@ -128,10 +128,12 @@ hay relaciones que impiden el borrado.
 ### Notificaciones
 | Método | Ruta | Roles | Descripción |
 |---|---|---|---|
-| GET | `/notificaciones` | todos | Lista paginada; `?leida=false` |
+| GET | `/notificaciones` | todos | Lista paginada, la más reciente primero; `?leida=false`. `meta.noLeidas` trae el total sin leer para el contador de la campana |
 | GET | `/notificaciones/stream` | todos | Flujo SSE de notificaciones nuevas |
-| PATCH | `/notificaciones/:id/leida` | todos | Marca como leída |
-| PATCH | `/notificaciones/leidas` | todos | Marca todas |
+| PATCH | `/notificaciones/:id/leida` | todos | Marca como leída (204); 404 si no existe o es de otro usuario |
+| PATCH | `/notificaciones/leidas` | todos | Marca todas; responde `{ "data": { "actualizadas": 3 } }` |
+
+Cada usuario solo ve y marca sus propias notificaciones. Se generan en la misma transacción del cambio que las origina (tabla "Eventos que generan notificación" en `03-estados-y-reglas.md`).
 
 ### Dashboard
 | Método | Ruta | Roles | Descripción |
@@ -222,7 +224,13 @@ Con `debeCambiarPassword: true`, cualquier otra ruta responde 403 `{ "error": { 
 
 ### SSE — GET /api/notificaciones/stream
 ```
+: conectado
+
 event: notificacion
-data: {"id":55,"tipo":"asignacion","mensaje":"Te asignaron SOL-2026-000123","solicitudId":123}
+data: {"tipo":"asignacion","mensaje":"Se te asignó la solicitud SOL-2026-000123","solicitudId":123}
+
+: latido
 ```
-`EventSource` no permite cabeceras, así que el frontend lee el flujo con `fetch` para poder enviar `Authorization`.
+`EventSource` no permite cabeceras, así que el frontend lee el flujo con `fetch` para poder enviar `Authorization` (el token nunca va en la URL). El evento es un aviso: al recibirlo, la campana vuelve a pedir `GET /notificaciones`, y el detalle de solicitud abierto se recarga si el aviso es de esa solicitud. Cada 25 s se envía un comentario `: latido` para que ningún proxy corte la conexión, y si se corta, el frontend se reconecta a los 5 s.
+
+Limitación conocida: los avisos en vivo se reparten en memoria dentro de un solo proceso del backend. Si se despliegan varias instancias, hay que cambiar `services/notificador.js` por `LISTEN/NOTIFY` de PostgreSQL. Las notificaciones guardadas no se pierden en ningún caso.
