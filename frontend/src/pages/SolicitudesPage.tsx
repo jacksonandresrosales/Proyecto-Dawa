@@ -94,7 +94,28 @@ export default function SolicitudesPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* En celular, tarjetas: estado y plazo a la vista sin deslizar la tabla de lado. */}
+            <ul className="divide-y md:hidden" aria-busy={loading}>
+              {items.map((s) => (
+                <li key={s.id}>
+                  <Link to={`/solicitudes/${s.id}`} className="block space-y-2 px-4 py-3 hover:bg-accent">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-sm text-primary">{s.codigo}</span>
+                      <Pildora tono={ESTADOS[s.estado].tono}>{ESTADOS[s.estado].nombre}</Pildora>
+                    </div>
+                    <p className="text-sm font-medium">{s.equipo}</p>
+                    <p className="text-xs text-muted-foreground">{rol !== 'cliente' && `${s.cliente.razonSocial} · `}{s.categoria.nombre}{rol !== 'tecnico' && ` · ${s.tecnico?.nombre ?? 'Sin asignar'}`}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Pildora tono={tonoPrioridad(s.prioridad)}>{s.prioridad}</Pildora>
+                      {s.estadoPlazo && <Pildora tono={PLAZOS[s.estadoPlazo].tono}>{PLAZOS[s.estadoPlazo].nombre}</Pildora>}
+                      <span className="font-mono text-xs text-muted-foreground">{fechaHora(s.fechaLimite)}</span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[52rem] text-left text-sm" aria-busy={loading}>
                 <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                   <tr>
@@ -125,6 +146,7 @@ export default function SolicitudesPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>

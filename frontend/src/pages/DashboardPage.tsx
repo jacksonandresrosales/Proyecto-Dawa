@@ -10,7 +10,7 @@ import { ESTADOS, tonoPrioridad, venceEn, type Tono } from '@/lib/solicitudes';
 // Paleta del gráfico de evolución validada (claro y oscuro) con la guía de visualización.
 const COLOR_CREADAS = '#2567FF';
 const COLOR_RESUELTAS = '#24A148';
-const PERIODOS = [{ id: '7', nombre: 'Últimos 7 días' }, { id: '30', nombre: 'Últimos 30 días' }, { id: 'todo', nombre: 'Todo el historial' }];
+const PERIODOS = [{ id: '7', nombre: '7 días' }, { id: '30', nombre: '30 días' }, { id: 'todo', nombre: 'Todo' }];
 const campo = 'h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 const isoLocal = (fecha: Date) => `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
@@ -135,7 +135,7 @@ export default function DashboardPage() {
       </header>
 
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtros del dashboard">
-        <div className="flex rounded-full border p-0.5">
+        <div className="flex rounded-full border p-0.5 whitespace-nowrap" aria-label="Periodo">
           {PERIODOS.map((p) => (
             <button key={p.id} type="button" aria-pressed={filtros.periodo === p.id} onClick={() => cambiar('periodo', p.id)}
               className={`rounded-full px-3 py-1 text-sm ${filtros.periodo === p.id ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>{p.nombre}</button>

@@ -28,7 +28,8 @@ export default function AppShell() {
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link className="text-lg font-semibold text-primary" to="/inicio">ServiGest</Link>
-          <nav className="flex flex-wrap items-center gap-1" aria-label="Navegación principal">
+          {/* En celular el menú baja a su propia fila y se desliza de lado en vez de ocupar tres filas. */}
+          <nav className="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto px-1 whitespace-nowrap md:order-none md:mx-0 md:w-auto md:flex-wrap md:px-0" aria-label="Navegación principal">
             <NavLink className={linkStyle} to="/inicio">Inicio</NavLink>
             <NavLink className={linkStyle} to="/solicitudes">Solicitudes</NavLink>
             {canManage && <NavLink className={linkStyle} to="/dashboard">Dashboard</NavLink>}

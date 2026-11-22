@@ -1,5 +1,6 @@
 export const API_BASE_URL =(import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
 const TOKEN_STORAGE_KEY = 'servigest_token';
+export const EVENTO_SESION_VENCIDA = 'servigest:sesion-vencida';
 
 export type ApiList<T> = {
   data: T[];
@@ -37,6 +38,11 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
     error?: { code?: string; message?: string };
   };
   if (!response.ok) {
+    // Un 401 con sesión abierta significa token vencido o cuenta desactivada: se cierra la sesión en un solo lugar.
+    if (response.status === 401 && token) {
+      saveApiToken('');
+      window.dispatchEvent(new CustomEvent(EVENTO_SESION_VENCIDA, { detail: payload.error?.code }));
+    }
     throw new ApiRequestError(
       payload.error?.message || 'No se pudo completar la solicitud.',
       payload.error?.code,
