@@ -3,6 +3,7 @@ import { AuthProvider } from '@/auth/AuthContext';
 import { PublicOnlyRoute, RequirePasswordChanged, RequireRoles, RequireUser } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
 import AdminPage from '@/pages/AdminPage';
+import DashboardPage from '@/pages/DashboardPage';
 import { ForgotPasswordPage, InitialSetupPage, LoginPage, PasswordChangePage, ProfilePage, ResetPasswordPage } from '@/pages/AuthPages';
 import HomePage from '@/pages/HomePage';
 import UsuariosPage from '@/pages/UsuariosPage';
@@ -33,6 +34,7 @@ function AppRoutes() {
             </Route>
             <Route element={<RequireRoles roles={['admin', 'coordinador']} />}>
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
             </Route>
             <Route element={<RequireRoles roles={['admin']} />}>
               <Route path="/admin/usuarios" element={<UsuariosPage />} />

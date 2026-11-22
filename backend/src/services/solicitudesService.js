@@ -38,7 +38,7 @@ export const presentar = (s, ahora = new Date()) => ({
   version: s.version,
 });
 
-const filtros = (q) => ({
+export const filtros = (q) => ({
   ...(q.estado ? { estado: { codigo: q.estado } } : {}),
   ...(q.prioridad ? { prioridadId: Number(q.prioridad) } : {}),
   ...(q.categoria ? { categoriaId: Number(q.categoria) } : {}),

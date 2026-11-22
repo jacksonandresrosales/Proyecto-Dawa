@@ -138,7 +138,16 @@ Cada usuario solo ve y marca sus propias notificaciones. Se generan en la misma 
 ### Dashboard
 | Método | Ruta | Roles | Descripción |
 |---|---|---|---|
-| GET | `/dashboard/indicadores` | A C | Filtros `desde`, `hasta`, `tecnico`, `categoria`, `cliente` |
+| GET | `/dashboard/indicadores` | A C | Filtros `desde`, `hasta` (AAAA-MM-DD), `tecnico`, `categoria`, `cliente` |
+
+Los indicadores se calculan en el backend con las mismas reglas de plazo que la lista de solicitudes (`services/sla.js`), en la función pura `services/indicadores.js`:
+
+- El periodo filtra por fecha de creación; todas las cifras se refieren a las solicitudes creadas en él. Sin `desde`, la evolución empieza en la primera solicitud, con un máximo de 90 días.
+- `abiertas` excluye resueltas, cerradas y canceladas. `vencidas` y `porVencer` son abiertas.
+- `cumplimientoPlazo` = cumplidas / (cumplidas + incumplidas), o `null` si ninguna se resolvió. Las canceladas no cuentan.
+- `tiempoPromedioResolucionHoras` = promedio de `resolved_at - created_at` de las resueltas.
+- `cargaPorTecnico` es la carga actual (no depende del periodo): solicitudes asignadas, en proceso o pendientes de información de cada técnico con cuenta activa.
+- `proximasAVencer`: las 5 abiertas con el plazo por delante más cercano.
 
 ### Sistema
 | Método | Ruta | Descripción |
@@ -210,14 +219,16 @@ Con `debeCambiarPassword: true`, cualquier otra ruta responde 403 `{ "error": { 
 {
   "data": {
     "total": 40,
-    "porEstado": [ { "estado": "en_proceso", "cantidad": 9 } ],
-    "porPrioridad": [ { "prioridad": "alta", "cantidad": 12 } ],
-    "cargaPorTecnico": [ { "tecnico": "Juan Pérez", "activas": 3, "cargaMax": 5 } ],
-    "tiempoPromedioResolucionHoras": 14.5,
-    "cumplimientoPlazo": 0.82,
+    "abiertas": 21,
     "vencidas": 4,
     "porVencer": 3,
-    "evolucion": [ { "fecha": "2026-11-10", "creadas": 5, "resueltas": 3 } ]
+    "cumplimientoPlazo": 0.82,
+    "tiempoPromedioResolucionHoras": 14.5,
+    "porEstado": [ { "estado": "en_proceso", "cantidad": 9 } ],
+    "porPrioridad": [ { "prioridad": "Alta", "cantidad": 12 } ],
+    "cargaPorTecnico": [ { "tecnicoId": 3, "tecnico": "Juan Pérez", "activas": 3, "cargaMax": 5, "disponible": true } ],
+    "evolucion": [ { "fecha": "2026-11-10", "creadas": 5, "resueltas": 3 } ],
+    "proximasAVencer": [ { "id": 125, "codigo": "SOL-2026-000125", "fechaLimite": "2026-11-22T18:00:00.000Z" } ]
   }
 }
 ```
