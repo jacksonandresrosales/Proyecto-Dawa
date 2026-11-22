@@ -27,3 +27,13 @@ describe('acciones por estado y rol', () => {
     expect(tonoPrioridad('Baja')).toBe('neutral');
   });
 });
+
+describe('venceEn', () => {
+  const ahora = new Date('2026-11-20T12:00:00Z').getTime();
+  it('expresa el plazo restante en minutos, horas o días', async () => {
+    const { venceEn } = await import('./solicitudes');
+    expect(venceEn('2026-11-20T12:36:00Z', ahora)).toBe('Vence en 36 min');
+    expect(venceEn('2026-11-20T17:00:00Z', ahora)).toBe('Vence en 5 h');
+    expect(venceEn('2026-11-23T12:00:00Z', ahora)).toBe('Vence en 3 d');
+  });
+});

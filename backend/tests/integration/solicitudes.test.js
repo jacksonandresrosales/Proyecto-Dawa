@@ -181,3 +181,23 @@ describe('notificaciones', () => {
     }
   });
 });
+
+describe('dashboard', () => {
+  it('calcula los indicadores desde la base y respeta los filtros y los roles', async () => {
+    const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
+    await cambiar(body.data.id, 'coordinador', { estado: 'aprobada', version: 1 });
+    await api().post(`/api/solicitudes/${body.data.id}/asignaciones`).set(bearer('coordinador')).send({ tecnicoId: ids.tecnico });
+
+    const r = await api().get('/api/dashboard/indicadores').set(bearer('coordinador'));
+    expect(r.status).toBe(200);
+    expect(r.body.data).toMatchObject({ total: 1, abiertas: 1, vencidas: 0, cumplimientoPlazo: null });
+    expect(r.body.data.porEstado.find((e) => e.estado === 'asignada').cantidad).toBe(1);
+    expect(r.body.data.cargaPorTecnico).toEqual([expect.objectContaining({ tecnicoId: ids.tecnico, activas: 1, cargaMax: 5 })]);
+    expect(r.body.data.evolucion.at(-1).creadas).toBe(1);
+
+    const otroCliente = await api().get(`/api/dashboard/indicadores?cliente=${ids.clienteA + 1}`).set(bearer('coordinador'));
+    expect(otroCliente.body.data.total).toBe(0);
+    expect((await api().get('/api/dashboard/indicadores?desde=ayer').set(bearer('coordinador'))).status).toBe(422);
+    expect((await api().get('/api/dashboard/indicadores').set(bearer('clienteA'))).status).toBe(403);
+  });
+});

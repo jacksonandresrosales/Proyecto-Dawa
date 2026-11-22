@@ -74,3 +74,10 @@ export function accionesPara(solicitud: Pick<Solicitud, 'estado'>, rol: UserRole
 
 const formato = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' });
 export const fechaHora = (valor: string | null) => (valor ? formato.format(new Date(valor)) : '—');
+
+export function venceEn(fechaLimite: string, ahora = Date.now()) {
+  const minutos = Math.max(0, Math.round((new Date(fechaLimite).getTime() - ahora) / 60000));
+  if (minutos < 60) return `Vence en ${minutos} min`;
+  if (minutos < 48 * 60) return `Vence en ${Math.round(minutos / 60)} h`;
+  return `Vence en ${Math.round(minutos / 1440)} d`;
+}
