@@ -42,7 +42,7 @@ Roles: **A** admin, **C** coordinador, **T** técnico, **L** cliente.
 | POST | `/auth/setup` | público, una sola vez | Crea al primer administrador solo si aún no existe ninguno; devuelve JWT e inicia sesión |
 | POST | `/auth/login` | público | Inicia sesión con correo y contraseña; error genérico para credenciales inválidas |
 | POST | `/auth/logout` | todos | Cierra sesión |
-| GET | `/auth/me` | todos | Usuario actual |
+| GET | `/auth/me` | todos | Usuario actual; incluye `clienteId` (o `null`) para que el cliente pida sus sedes |
 | PATCH | `/auth/me` | todos | Edita nombre/teléfono; cambio de contraseña requiere la actual, salvo primer acceso |
 | POST | `/auth/forgot` | público | Genera token de restablecimiento; siempre responde 200 |
 | POST | `/auth/reset` | público | Cambia la contraseña con un token válido |
@@ -90,7 +90,7 @@ La comparación de nombres de catálogos no distingue mayúsculas; los nombres r
 | Recurso | Escritura | Lectura |
 |---|---|---|
 | `/usuarios` | A | A |
-| `/clientes` y `/clientes/:id/sedes` | A C | A C (L solo sus sedes) |
+| `/clientes` y `/clientes/:id/sedes` | A C | A C (L solo sus sedes: `GET /clientes/:id/sedes` devuelve las vigentes y responde 404 si el cliente pide las de otra organización) |
 | `/tecnicos` | A C | A C |
 | `/especialidades` | A C | A C |
 | `/categorias` | A C | todos |

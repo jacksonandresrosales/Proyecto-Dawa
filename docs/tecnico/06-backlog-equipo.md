@@ -38,7 +38,9 @@ Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (i
 | T-11 Cálculo de plazos | Hecho | `services/sla.js` |
 | T-21 Pruebas unitarias de reglas | Hecho | Reglas 1 a 6 y 8 |
 | T-19 Notificaciones | En curso | Ya se guardan en la tabla; falta la API y el flujo SSE |
-| T-12 OpenAPI, T-15 y T-16 pantallas de solicitudes, T-18 adjuntos, T-20 dashboard, T-22 a T-25 | Pendiente | |
+| T-15 Lista, nueva solicitud y detalle | Hecho | Pantallas de los cuatro roles según el diseño de Claude Design: filtros, paginación, acciones por estado y rol, modales con comentario o resolución, historial y estados de carga, vacío y error |
+| T-16 Modal asignar y tablero de carga | En curso | El modal de asignar y reasignar está hecho; falta el tablero de carga (necesita `GET /tecnicos/carga`) |
+| T-12 OpenAPI, T-18 adjuntos, T-20 dashboard, T-22 a T-25 | Pendiente | |
 
 ## Backlog inicial
 
