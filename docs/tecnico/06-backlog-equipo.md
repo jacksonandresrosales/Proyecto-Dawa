@@ -25,6 +25,21 @@ Compartido: modelo de datos y datos semilla (todos, semana 1), OpenAPI (cada uno
 
 Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (integración y reglas).
 
+## Avance (22/11/2026)
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| T-01 Esquema, migración y trigger de historial | Hecho | Las 16 tablas del modelo, el trigger que vuelve inalterable el historial, el índice de asignación activa y los CHECK |
+| T-02 Datos semilla | Hecho | `npm run seed` (catálogos base) y `npm run seed:demo` (40 solicitudes de ejemplo) |
+| T-03 a T-07, T-13, T-14 y T-17 Seguridad, usuarios y administración | Hecho | Backend y pantallas: login, primer acceso, perfil, restablecimiento, usuarios y catálogos |
+| T-08 Registrar y listar solicitudes | Hecho | Falta el filtro `plazo` |
+| T-09 Cambio de estado con historial | Hecho | |
+| T-10 Asignación y reasignación | Hecho | Falta `GET /solicitudes/:id/tecnicos-sugeridos` |
+| T-11 Cálculo de plazos | Hecho | `services/sla.js` |
+| T-21 Pruebas unitarias de reglas | Hecho | Reglas 1 a 6 y 8 |
+| T-19 Notificaciones | En curso | Ya se guardan en la tabla; falta la API y el flujo SSE |
+| T-12 OpenAPI, T-15 y T-16 pantallas de solicitudes, T-18 adjuntos, T-20 dashboard, T-22 a T-25 | Pendiente | |
+
 ## Backlog inicial
 
 | ID | Tarea | Historias | Dueño | Semana |
