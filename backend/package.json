@@ -7,6 +7,7 @@
     "start": "node --env-file-if-exists=.env src/server.js",
     "migrate": "prisma migrate dev",
     "seed": "prisma db seed",
+    "seed:demo": "npm run seed && node --env-file-if-exists=.env prisma/seed-demo.js",
     "postinstall": "prisma generate",
     "test": "npm run test:unit && npm run test:int",
     "test:unit": "vitest run",

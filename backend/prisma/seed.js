@@ -2,6 +2,25 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+const ESTADOS = [
+  { codigo: 'registrada', nombre: 'Registrada', esFinal: false },
+  { codigo: 'aprobada', nombre: 'Aprobada', esFinal: false },
+  { codigo: 'asignada', nombre: 'Asignada', esFinal: false },
+  { codigo: 'en_proceso', nombre: 'En proceso', esFinal: false },
+  { codigo: 'pendiente_info', nombre: 'Pendiente de información', esFinal: false },
+  { codigo: 'resuelta', nombre: 'Resuelta', esFinal: false },
+  { codigo: 'cerrada', nombre: 'Cerrada', esFinal: true },
+  { codigo: 'cancelada', nombre: 'Cancelada', esFinal: true },
+];
+
+const PRIORIDADES = [
+  { nombre: 'Crítica', horasSla: 4 },
+  { nombre: 'Alta', horasSla: 8 },
+  { nombre: 'Media', horasSla: 24 },
+  { nombre: 'Baja', horasSla: 72 },
+];
+
 const email = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
 const password = process.env.INITIAL_ADMIN_PASSWORD;
 
@@ -11,8 +30,21 @@ async function seed() {
     await prisma.rol.upsert({ where: { nombre }, update: {}, create: { nombre } });
   }
 
+  // La migración ya inserta los estados; se repite aquí por si la tabla se vació (pruebas).
+  for (const estado of ESTADOS) {
+    await prisma.estado.upsert({ where: { codigo: estado.codigo }, update: {}, create: estado });
+  }
+
+  // Plazos iniciales (03-estados-y-reglas.md). Si el admin ya los editó, no se tocan.
+  for (const prioridad of PRIORIDADES) {
+    const existe = await prisma.prioridad.findFirst({
+      where: { nombre: { equals: prioridad.nombre, mode: 'insensitive' } },
+    });
+    if (!existe) await prisma.prioridad.create({ data: prioridad });
+  }
+
   if (!email && !password) {
-    console.info('Roles iniciales creados. Crea el primer administrador desde /configurar.');
+    console.info('Roles, estados y prioridades listos. Crea el primer administrador desde /configurar.');
     return;
   }
   if (!email || !password) {

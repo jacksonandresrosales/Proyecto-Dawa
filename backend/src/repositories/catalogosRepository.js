@@ -24,5 +24,7 @@ export const contarUsoCatalogo = async (recurso, id) => {
     ]);
     return categorias + tecnicos;
   }
+  if (recurso === 'categorias') return prisma.solicitud.count({ where: { categoriaId: id } });
+  if (recurso === 'prioridades') return prisma.solicitud.count({ where: { prioridadId: id } });
   return 0;
 };
