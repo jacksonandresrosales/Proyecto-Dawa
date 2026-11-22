@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/auth/AuthContext';
+import Campana from '@/components/Campana';
 
 const linkStyle = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3 py-2 text-sm font-medium ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent'}`;
@@ -35,6 +36,7 @@ export default function AppShell() {
             <NavLink className={linkStyle} to="/perfil">Mi perfil</NavLink>
           </nav>
           <div className="flex items-center gap-3">
+            <Campana />
             <span className="hidden text-sm text-muted-foreground sm:inline">{user?.nombre}</span>
             <Button type="button" variant="outline" onClick={() => { void signOut(); }}>Cerrar sesión</Button>
           </div>

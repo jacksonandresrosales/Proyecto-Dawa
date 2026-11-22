@@ -3,6 +3,7 @@ import { paginar } from '../utils/paginacion.js';
 import * as repository from '../repositories/solicitudesRepository.js';
 import { calcularFechaLimite, estadoPlazo } from './sla.js';
 import { TRANSICIONES, avisosDeCambio } from './transiciones.js';
+import { emitir } from './notificador.js';
 
 const DIA = 24 * 60 * 60 * 1000;
 const noEncontrada = () => new AppError(404, 'NO_ENCONTRADO', 'Solicitud no encontrada');
@@ -93,6 +94,7 @@ export async function crear(values, usuario) {
   if (!prioridad?.activo) throw invalido('PRIORIDAD_INVALIDA', 'prioridadId', 'La prioridad no existe o no está vigente');
 
   const ahora = new Date();
+  const coordinadores = await repository.idsCoordinadores();
   const solicitud = await repository.crearSolicitud({
     datos: {
       clienteId,
@@ -105,8 +107,9 @@ export async function crear(values, usuario) {
       createdAt: ahora,
       fechaLimite: calcularFechaLimite(ahora, prioridad.horasSla), // regla 6: el plazo lo fija el backend
     },
-    notificar: await repository.idsCoordinadores(),
+    notificar: coordinadores,
   });
+  emitir(coordinadores.map((usuarioId) => ({ usuarioId, tipo: 'registro', mensaje: `Nueva solicitud ${solicitud.codigo}` })), solicitud.id);
   return presentar(solicitud, ahora);
 }
 
@@ -146,5 +149,6 @@ export async function cambiarEstado(id, values, usuario) {
   });
   // Regla 8: la versión enviada debe coincidir con la guardada.
   if (!actualizada) throw new AppError(409, 'CONFLICTO_VERSION', 'Otra persona modificó la solicitud; recárgala e inténtalo de nuevo');
+  emitir(avisos, id);
   return presentar(actualizada, ahora);
 }

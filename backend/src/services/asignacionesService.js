@@ -2,6 +2,7 @@ import { AppError } from '../utils/AppError.js';
 import * as repository from '../repositories/solicitudesRepository.js';
 import { ESTADOS_ACTIVOS } from './transiciones.js';
 import { presentar } from './solicitudesService.js';
+import { emitir } from './notificador.js';
 
 const rechazo = (code, mensaje) => new AppError(422, code, mensaje);
 
@@ -45,5 +46,6 @@ export async function asignar(id, values, usuario) {
     avisos,
   });
   if (!actualizada) throw new AppError(409, 'CONFLICTO_VERSION', 'Otra persona modificó la solicitud; recárgala e inténtalo de nuevo');
+  emitir(avisos, id);
   return presentar(actualizada);
 }
