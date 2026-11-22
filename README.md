@@ -39,9 +39,21 @@ para crear la cuenta y entrar. Esa configuración solo funciona mientras no
 exista ningún administrador. Después, las cuentas restantes las crea el admin
 desde la aplicación. No hay registro público.
 
-Como alternativa para entornos controlados, `npm run seed` crea los roles; si
-se definen `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD`, también crea la
-cuenta inicial.
+Como alternativa para entornos controlados, `npm run seed` crea los roles,
+estados y prioridades; si se definen `INITIAL_ADMIN_EMAIL` e
+`INITIAL_ADMIN_PASSWORD`, también crea la cuenta inicial.
+
+Para desarrollo y demostraciones, `npm run seed:demo` carga además usuarios de
+todos los roles y 40 solicitudes con historial, asignaciones y notificaciones.
+Las cuentas son `admin@servigest.test`, `coordinador1@servigest.test`,
+`coordinador2@servigest.test`, `tecnico1@servigest.test` … `tecnico5@servigest.test`
+y `cliente1@servigest.test` … `cliente4@servigest.test`, con la contraseña
+`ServiGest2026` (o la de la variable `DEMO_PASSWORD`). No se ejecuta con
+`NODE_ENV=production`.
+
+Después de traer cambios que agregan migraciones, vuelve a ejecutar
+`npm run migrate`: aplica la migración y regenera el cliente de Prisma. Si el
+backend está corriendo, detenlo antes; en Windows bloquea el archivo del cliente.
 
 ```bash
 npm run dev:backend

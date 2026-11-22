@@ -199,6 +199,11 @@ Convenciones: nombres en `snake_case`; PK `id` entera autoincremental; fechas `t
 
 ## Reproducibilidad
 
-- Esquema: `backend/prisma/schema.prisma` y `backend/prisma/migrations/` (el trigger y el índice parcial van en SQL dentro de una migración).
-- Datos de prueba: `backend/prisma/seed.js` — 4 roles, 8 estados, 4 prioridades, especialidades, categorías, 1 administrador, 2 coordinadores, 5 técnicos, 4 clientes con sedes y unas 40 solicitudes repartidas por estado y fecha para que el dashboard tenga datos.
-- Comandos: `npx prisma migrate deploy` y `npx prisma db seed`.
+- Esquema: `backend/prisma/schema.prisma` y `backend/prisma/migrations/`. Lo que Prisma no puede expresar va en SQL dentro de `20261122000000_solicitudes_asignaciones_historial`:
+  - trigger `historial_estados_sin_cambios`: rechaza `UPDATE` y `DELETE` sobre `historial_estados` (regla 7). `TRUNCATE` no dispara triggers de fila, por eso las pruebas de integración pueden vaciar la base;
+  - índice único parcial `asignaciones_una_activa_por_solicitud`;
+  - `CHECK`: formato `SOL-AAAA-NNNNNN`, `version > 0`, `fecha_limite > created_at`, `resolved_at >= created_at`, `closed_at` solo con `resolucion` no vacía (regla 1), `tamano > 0`, `tipo` de notificación válido y que el historial registre un cambio real de estado;
+  - los 8 estados, que son un catálogo fijo porque la máquina de estados depende de sus códigos.
+- Datos base: `backend/prisma/seed.js` (`npm run seed`) — 4 roles, 8 estados y 4 prioridades (crítica 4 h, alta 8 h, media 24 h, baja 72 h). No modifica prioridades ya editadas por el administrador.
+- Datos de demostración: `backend/prisma/seed-demo.js` (`npm run seed:demo`, ejecuta antes el seed base) — 5 especialidades, 8 categorías, 1 administrador, 2 coordinadores, 5 técnicos (uno no disponible), 4 clientes con 2 sedes cada uno y 40 solicitudes de los últimos 60 días repartidas en los 8 estados, con historial, asignaciones (incluidas reasignaciones justificadas) y notificaciones coherentes con `03-estados-y-reglas.md`. Respeta especialidad, disponibilidad y carga máxima, y deja solicitudes a tiempo, por vencer, vencidas, cumplidas e incumplidas para el dashboard. Es reproducible (semilla fija), no duplica datos si se vuelve a ejecutar y se niega a correr con `NODE_ENV=production`.
+- Comandos: `npm run migrate` (desarrollo) o `npx prisma migrate deploy` (otros ambientes), luego `npm run seed` o `npm run seed:demo`.
