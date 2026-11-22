@@ -11,7 +11,7 @@ export type Notificacion = {
 export type AvisoEnVivo = Pick<Notificacion, 'tipo' | 'mensaje' | 'solicitudId'>;
 type Lista = { data: Notificacion[]; meta: ApiList<Notificacion>['meta'] & { noLeidas: number } };
 
-export const listarNotificaciones = () => apiRequest<Lista>('/notificaciones?limit=8');
+export const listarNotificaciones = (params = 'limit=8') => apiRequest<Lista>(`/notificaciones?${params}`);
 export const marcarLeida = (id: number) => apiRequest<void>(`/notificaciones/${id}/leida`, { method: 'PATCH' });
 export const marcarTodas = () => apiRequest<unknown>('/notificaciones/leidas', { method: 'PATCH' });
 

@@ -3,7 +3,9 @@ import { AuthProvider } from '@/auth/AuthContext';
 import { PublicOnlyRoute, RequirePasswordChanged, RequireRoles, RequireUser } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
 import AdminPage from '@/pages/AdminPage';
+import CargaTecnicosPage from '@/pages/CargaTecnicosPage';
 import DashboardPage from '@/pages/DashboardPage';
+import NotificacionesPage from '@/pages/NotificacionesPage';
 import { ForgotPasswordPage, InitialSetupPage, LoginPage, PasswordChangePage, ProfilePage, ResetPasswordPage } from '@/pages/AuthPages';
 import HomePage from '@/pages/HomePage';
 import UsuariosPage from '@/pages/UsuariosPage';
@@ -27,6 +29,7 @@ function AppRoutes() {
             <Route path="/" element={<Navigate to="/inicio" replace />} />
             <Route path="/inicio" element={<HomePage />} />
             <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/notificaciones" element={<NotificacionesPage />} />
             <Route path="/solicitudes" element={<SolicitudesPage />} />
             <Route path="/solicitudes/:id" element={<SolicitudDetallePage />} />
             <Route element={<RequireRoles roles={['coordinador', 'cliente']} />}>
@@ -35,6 +38,7 @@ function AppRoutes() {
             <Route element={<RequireRoles roles={['admin', 'coordinador']} />}>
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/tecnicos/carga" element={<CargaTecnicosPage />} />
             </Route>
             <Route element={<RequireRoles roles={['admin']} />}>
               <Route path="/admin/usuarios" element={<UsuariosPage />} />

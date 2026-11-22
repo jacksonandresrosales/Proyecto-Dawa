@@ -62,11 +62,13 @@ Con `debeCambiarPassword: true`, solo se permiten `GET/PATCH /auth/me` y `POST /
 | PATCH | `/solicitudes/:id/estado` | A C T L | Cambia estado según la tabla de transiciones | Hecho |
 | POST | `/solicitudes/:id/asignaciones` | C | Asigna o reasigna técnico | Hecho |
 | GET | `/solicitudes/:id/historial` | A C T L | Auditoría | Hecho |
-| GET | `/solicitudes/:id/tecnicos-sugeridos` | C | Técnicos con indicador de si cumplen especialidad, disponibilidad y carga | Pendiente |
-| POST | `/solicitudes/:id/adjuntos` | C L | Sube un archivo (multipart) | Pendiente |
-| GET | `/solicitudes/:id/adjuntos/:adjuntoId` | A C T L | Descarga | Pendiente |
+| GET | `/solicitudes/:id/adjuntos` | A C T L | Lista los adjuntos | Hecho |
+| POST | `/solicitudes/:id/adjuntos?nombre=` | C L | Sube un archivo | Hecho |
+| GET | `/solicitudes/:id/adjuntos/:adjuntoId` | A C T L | Descarga | Hecho |
 
-Pendiente también: el filtro `plazo` y el orden `?sort` en la lista.
+Pendiente: el filtro `plazo` y el orden `?sort` en la lista. `tecnicos-sugeridos` se reemplazó por `GET /tecnicos/carga`: el modal de asignar marca qué técnicos cumplen especialidad, disponibilidad y cupo con esos datos, y la API vuelve a validarlo al confirmar.
+
+**Adjuntos.** El cuerpo de `POST` es el archivo tal cual, sin multipart (sin dependencias extra): su tipo va en `Content-Type` y su nombre en `?nombre=`. Se aceptan PDF, PNG, JPG, WEBP y TXT, de hasta 5 MB y como máximo 5 por solicitud. No se adjunta a solicitudes cerradas ni canceladas. Se guardan en `backend/uploads/` con un nombre aleatorio (el nombre original es solo un dato y nunca forma la ruta). La descarga responde con `Content-Disposition: attachment`, nunca se muestra dentro de la app. Errores: 422 `TIPO_NO_PERMITIDO`, `ARCHIVO_VACIO`, `LIMITE_ADJUNTOS`; 413 `ARCHIVO_DEMASIADO_GRANDE`; 409 `ESTADO_NO_PERMITE_ADJUNTOS`.
 
 Cada solicitud se devuelve con `id`, `codigo`, `estado`, `prioridad`, `prioridadId`, `categoria`, `cliente`, `sede`, `tecnico` (o `null`), `equipo`, `descripcion`, `resolucion`, `fechaLimite`, `estadoPlazo` (`a_tiempo`, `por_vencer`, `vencida`, `cumplida`, `incumplida`, o `null` si está cancelada), `createdAt`, `resolvedAt`, `closedAt` y `version`. `PATCH /estado` exige la `version` que el cliente leyó.
 
@@ -96,7 +98,7 @@ La comparación de nombres de catálogos no distingue mayúsculas; los nombres r
 | `/categorias` | A C | todos |
 | `/prioridades` | A C | todos |
 
-`GET /tecnicos/carga` (A C): técnicos con su carga actual y solicitudes activas.
+`GET /tecnicos/carga` (A C): técnicos con cuenta vigente, con `disponible`, `cargaMax`, `especialidades` y `activas` (sus solicitudes asignadas, en proceso o pendientes de información, la más urgente primero).
 
 ### Administración: filtros y carga útil
 

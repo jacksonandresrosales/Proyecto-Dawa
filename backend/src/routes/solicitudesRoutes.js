@@ -1,4 +1,6 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
+import { z } from 'zod';
+import { MAX_BYTES } from '../services/adjuntosService.js';
 import * as controller from '../controllers/solicitudesController.js';
 import { auth } from '../middlewares/auth.js';
 import { requireRole } from '../middlewares/requireRole.js';
@@ -15,3 +17,11 @@ solicitudesRouter.get('/:id', validate(idSchema, 'params'), controller.obtener);
 solicitudesRouter.patch('/:id/estado', validate(idSchema, 'params'), validate(cambioEstadoSchema), controller.cambiarEstado);
 solicitudesRouter.post('/:id/asignaciones', requireRole('coordinador'), validate(idSchema, 'params'), validate(asignacionSchema), controller.asignar);
 solicitudesRouter.get('/:id/historial', validate(idSchema, 'params'), controller.historial);
+
+// Adjuntos: el cuerpo es el archivo tal cual (sin multipart), con su tipo en Content-Type y su nombre en ?nombre=.
+const archivoSchema = z.object({ nombre: z.string().trim().min(1, 'Es obligatorio').max(200) });
+const adjuntoSchema = z.object({ id: z.coerce.number().int().positive(), adjuntoId: z.coerce.number().int().positive() });
+solicitudesRouter.get('/:id/adjuntos', validate(idSchema, 'params'), controller.listarAdjuntos);
+solicitudesRouter.post('/:id/adjuntos', requireRole('coordinador', 'cliente'), validate(idSchema, 'params'), validate(archivoSchema, 'query'),
+  express.raw({ type: () => true, limit: MAX_BYTES }), controller.subirAdjunto);
+solicitudesRouter.get('/:id/adjuntos/:adjuntoId', validate(adjuntoSchema, 'params'), controller.descargarAdjunto);

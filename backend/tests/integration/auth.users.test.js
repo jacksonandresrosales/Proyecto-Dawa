@@ -249,3 +249,18 @@ describe('autenticación y usuarios', () => {
     expect(user.activo).toBe(true);
   });
 });
+
+describe('límite de intentos de login', () => {
+  it('no cuenta los inicios de sesión correctos y bloquea los fallidos repetidos', async () => {
+    const entrar = (password) => api().post('/api/auth/login').send({ email: 'admin@security.test', password });
+    // Más logins correctos que el límite (10): ninguno se bloquea.
+    for (let i = 0; i < 12; i += 1) expect((await entrar('Current123')).status).toBe(200);
+    let respuesta;
+    for (let i = 0; i < 11; i += 1) {
+      respuesta = await entrar('incorrecta-123');
+      if (respuesta.status === 429) break;
+    }
+    expect(respuesta.status).toBe(429);
+    expect(respuesta.body.error.code).toBe('LIMITE_SOLICITUDES');
+  });
+});

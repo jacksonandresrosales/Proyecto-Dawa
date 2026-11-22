@@ -81,6 +81,7 @@ npm run dev:frontend
 | `npm run typecheck` | Tipos de TypeScript del frontend |
 
 La primera vez que se usan las pruebas E2E: `npx playwright install chromium`.
+Las E2E recorren los dos flujos del enunciado en la app real ("registro → asignación → atención" y "consulta → seguimiento → cierre"), así que necesitan el backend corriendo con los datos de `npm run seed:demo`. El frontend lo levanta Playwright si no está abierto.
 
 ## Estructura
 

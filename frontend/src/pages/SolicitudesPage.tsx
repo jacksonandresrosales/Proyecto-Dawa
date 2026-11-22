@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ApiRequestError } from '@/api/admin';
 import { listarSolicitudes, type EstadoCodigo, type Solicitud } from '@/api/solicitudes';
 import { useAuth } from '@/auth/AuthContext';
@@ -13,11 +13,18 @@ const campo = 'h-10 rounded-lg border border-input bg-card px-3 text-sm text-for
 const TITULOS = { cliente: 'Mis solicitudes', tecnico: 'Asignadas a mí', coordinador: 'Solicitudes', admin: 'Solicitudes' };
 const vacio = { q: '', estado: '', desde: '', hasta: '' };
 
-export default function SolicitudesPage() {
+// Se vuelve a montar al cambiar ?estado= (por ejemplo, del inicio a Solicitudes) para no arrastrar filtros viejos.
+export default function SolicitudesRuta() {
+  return <SolicitudesPage key={useSearchParams()[0].get('estado') ?? ''} />;
+}
+
+function SolicitudesPage() {
   const { user } = useAuth();
   const rol = user?.rol ?? 'cliente';
-  const [borrador, setBorrador] = useState(vacio);
-  const [filtros, setFiltros] = useState(vacio);
+  // Los enlaces del inicio llegan filtrados por estado (?estado=registrada).
+  const estadoInicial = useSearchParams()[0].get('estado') ?? '';
+  const [borrador, setBorrador] = useState({ ...vacio, estado: estadoInicial });
+  const [filtros, setFiltros] = useState({ ...vacio, estado: estadoInicial });
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<Solicitud[]>([]);
   const [total, setTotal] = useState(0);

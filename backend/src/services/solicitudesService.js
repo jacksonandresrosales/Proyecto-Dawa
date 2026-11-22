@@ -52,7 +52,7 @@ export const filtros = (q) => ({
   ...(q.q ? { OR: ['codigo', 'equipo', 'descripcion'].map((campo) => ({ [campo]: { contains: q.q, mode: 'insensitive' } })) } : {}),
 });
 
-async function buscarVisible(id, usuario) {
+export async function buscarVisible(id, usuario) {
   const solicitud = await repository.buscarSolicitud({ AND: [{ id }, alcance(usuario)] });
   if (!solicitud) throw noEncontrada();
   return solicitud;

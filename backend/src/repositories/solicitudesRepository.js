@@ -83,3 +83,12 @@ export const asignar = ({ id, version, tecnicoId, usuarioId, justificacion, camb
   if (avisos.length) await tx.notificacion.createMany({ data: avisos.map((aviso) => ({ ...aviso, solicitudId: id })) });
   return tx.solicitud.findUnique({ where: { id }, include });
 });
+
+export const listarAdjuntos = (solicitudId) => prisma.adjunto.findMany({
+  where: { solicitudId },
+  orderBy: { createdAt: 'asc' },
+  include: { usuario: { select: { nombre: true } } },
+});
+export const contarAdjuntos = (solicitudId) => prisma.adjunto.count({ where: { solicitudId } });
+export const crearAdjunto = (data) => prisma.adjunto.create({ data, include: { usuario: { select: { nombre: true } } } });
+export const buscarAdjunto = (id, solicitudId) => prisma.adjunto.findFirst({ where: { id, solicitudId } });

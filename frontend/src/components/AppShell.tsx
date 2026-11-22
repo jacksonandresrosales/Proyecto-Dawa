@@ -33,6 +33,7 @@ export default function AppShell() {
             <NavLink className={linkStyle} to="/inicio">Inicio</NavLink>
             <NavLink className={linkStyle} to="/solicitudes">Solicitudes</NavLink>
             {canManage && <NavLink className={linkStyle} to="/dashboard">Dashboard</NavLink>}
+            {canManage && <NavLink className={linkStyle} to="/tecnicos/carga">Carga de técnicos</NavLink>}
             {canManage && <NavLink className={linkStyle} to="/admin">Clientes y catálogos</NavLink>}
             {user?.rol === 'admin' && <NavLink className={linkStyle} to="/admin/usuarios">Usuarios</NavLink>}
             <NavLink className={linkStyle} to="/perfil">Mi perfil</NavLink>

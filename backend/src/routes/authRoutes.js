@@ -8,7 +8,8 @@ import { forgotPasswordSchema, initialSetupSchema, loginSchema, profileUpdateSch
 const rateLimitHandler = (_req, res) => res.status(429).json({
   error: { code: 'LIMITE_SOLICITUDES', message: 'Demasiados intentos. Espera antes de volver a intentarlo.' },
 });
-const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-8', legacyHeaders: false, handler: rateLimitHandler });
+// Solo cuentan los intentos fallidos: frena la fuerza bruta sin bloquear a quien entra bien varias veces.
+const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, skipSuccessfulRequests: true, standardHeaders: 'draft-8', legacyHeaders: false, handler: rateLimitHandler });
 const forgotLimit = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, handler: rateLimitHandler });
 const setupLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, handler: rateLimitHandler });
 
