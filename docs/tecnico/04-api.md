@@ -54,17 +54,34 @@ No existe auto-registro público. `/auth/setup` solo se habilita en desarrollo y
 Con `debeCambiarPassword: true`, solo se permiten `GET/PATCH /auth/me` y `POST /auth/logout`. Al completar el cambio inicial se libera el acceso.
 
 ### Solicitudes
-| Método | Ruta | Roles | Descripción |
-|---|---|---|---|
-| GET | `/solicitudes` | A C T L | Lista paginada; filtros `estado`, `prioridad`, `categoria`, `cliente`, `tecnico`, `plazo`, `desde`, `hasta`, `q`. T ve las suyas, L las de su organización |
-| POST | `/solicitudes` | C L | Registra; C envía `clienteId` |
-| GET | `/solicitudes/:id` | A C T L | Detalle |
-| PATCH | `/solicitudes/:id/estado` | A C T L | Cambia estado según la tabla de transiciones |
-| POST | `/solicitudes/:id/asignaciones` | C | Asigna o reasigna técnico |
-| GET | `/solicitudes/:id/tecnicos-sugeridos` | C | Técnicos con indicador de si cumplen especialidad, disponibilidad y carga |
-| GET | `/solicitudes/:id/historial` | A C T L | Auditoría |
-| POST | `/solicitudes/:id/adjuntos` | C L | Sube un archivo (multipart) |
-| GET | `/solicitudes/:id/adjuntos/:adjuntoId` | A C T L | Descarga |
+| Método | Ruta | Roles | Descripción | Estado |
+|---|---|---|---|---|
+| GET | `/solicitudes` | A C T L | Lista paginada, de la más reciente a la más antigua; filtros `estado`, `prioridad`, `categoria`, `cliente`, `tecnico`, `desde`, `hasta` (AAAA-MM-DD) y `q` (código, equipo o descripción). T ve las suyas, L las de su organización | Hecho |
+| POST | `/solicitudes` | C L | Registra; C envía `clienteId` | Hecho |
+| GET | `/solicitudes/:id` | A C T L | Detalle | Hecho |
+| PATCH | `/solicitudes/:id/estado` | A C T L | Cambia estado según la tabla de transiciones | Hecho |
+| POST | `/solicitudes/:id/asignaciones` | C | Asigna o reasigna técnico | Hecho |
+| GET | `/solicitudes/:id/historial` | A C T L | Auditoría | Hecho |
+| GET | `/solicitudes/:id/tecnicos-sugeridos` | C | Técnicos con indicador de si cumplen especialidad, disponibilidad y carga | Pendiente |
+| POST | `/solicitudes/:id/adjuntos` | C L | Sube un archivo (multipart) | Pendiente |
+| GET | `/solicitudes/:id/adjuntos/:adjuntoId` | A C T L | Descarga | Pendiente |
+
+Pendiente también: el filtro `plazo` y el orden `?sort` en la lista.
+
+Cada solicitud se devuelve con `id`, `codigo`, `estado`, `prioridad`, `prioridadId`, `categoria`, `cliente`, `sede`, `tecnico` (o `null`), `equipo`, `descripcion`, `resolucion`, `fechaLimite`, `estadoPlazo` (`a_tiempo`, `por_vencer`, `vencida`, `cumplida`, `incumplida`, o `null` si está cancelada), `createdAt`, `resolvedAt`, `closedAt` y `version`. `PATCH /estado` exige la `version` que el cliente leyó.
+
+Códigos de error propios del recurso:
+
+| Código | Estado | Cuándo |
+|---|---|---|
+| `SEDE_INVALIDA` | 422 | La sede no es del cliente o no está vigente |
+| `CLIENTE_INACTIVO`, `CATEGORIA_INVALIDA`, `PRIORIDAD_INVALIDA` | 422 | Cliente, categoría o prioridad no vigente |
+| `TRANSICION_INVALIDA` | 409 | El cambio no existe en la tabla de transiciones |
+| `COMENTARIO_REQUERIDO`, `RESOLUCION_REQUERIDA` | 422 | La transición exige comentario o resolución |
+| `CONFLICTO_VERSION` | 409 | Otra persona cambió la solicitud desde que se leyó |
+| `ESTADO_NO_ASIGNABLE` | 409 | Se intenta asignar una solicitud registrada, resuelta, cerrada o cancelada |
+| `TECNICO_SIN_ESPECIALIDAD`, `TECNICO_NO_DISPONIBLE`, `TECNICO_CARGA_MAXIMA` | 422 | Regla 5 |
+| `MISMO_TECNICO`, `JUSTIFICACION_REQUERIDA` | 422 | Reasignación al mismo técnico o sin justificación |
 
 ### Catálogos y administración
 CRUD con la misma forma: `GET /` (lista paginada, `?q`, `?activo`), `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id` (409 `EN_USO` si tiene registros relacionados; usar `PATCH` con `activo: false`). `POST` y `PATCH` responden 409 `DUPLICADO` con `details: [{ campo, mensaje }]` si el correo, el RUC o el nombre ya existe.
