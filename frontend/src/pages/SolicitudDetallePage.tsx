@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ApiRequestError } from '@/api/admin';
 import {
-  asignarTecnico, cambiarEstado, listarCategorias, listarTecnicos, obtenerHistorial, obtenerSolicitud,
-  type EventoHistorial, type Solicitud, type TecnicoOpcion,
+  asignarTecnico, cambiarEstado, descargarAdjunto, listarAdjuntos, listarCategorias, obtenerCarga, obtenerHistorial, obtenerSolicitud, problemaAdjunto, subirAdjunto,
+  type Adjunto, type CargaTecnico, type EventoHistorial, type Solicitud,
 } from '@/api/solicitudes';
 import { useAuth } from '@/auth/AuthContext';
 import type { AvisoEnVivo } from '@/api/notificaciones';
@@ -157,6 +157,10 @@ export default function SolicitudDetallePage() {
               <CardContent><p className="whitespace-pre-line text-sm">{solicitud.resolucion}</p></CardContent>
             </Card>
           )}
+          <Adjuntos
+            solicitudId={solicitud.id}
+            puedeSubir={['coordinador', 'cliente'].includes(user.rol) && !['cerrada', 'cancelada'].includes(solicitud.estado)}
+          />
         </div>
 
         <Card>
@@ -203,7 +207,7 @@ export default function SolicitudDetallePage() {
 }
 
 function AsignarModal({ solicitud, onClose, onAsignada }: { solicitud: Solicitud; onClose: () => void; onAsignada: (s: Solicitud) => void }) {
-  const [tecnicos, setTecnicos] = useState<TecnicoOpcion[] | null>(null);
+  const [tecnicos, setTecnicos] = useState<CargaTecnico[] | null>(null);
   const [especialidadId, setEspecialidadId] = useState<number | null>(null);
   const [tecnicoId, setTecnicoId] = useState(0);
   const [justificacion, setJustificacion] = useState('');
@@ -213,7 +217,7 @@ function AsignarModal({ solicitud, onClose, onAsignada }: { solicitud: Solicitud
 
   useEffect(() => {
     // La especialidad requerida está en la categoría; se lee de /categorias.
-    Promise.all([listarTecnicos(), listarCategorias()])
+    Promise.all([obtenerCarga(), listarCategorias()])
       .then(([t, categorias]) => {
         setTecnicos(t);
         setEspecialidadId(categorias.find((c) => c.id === solicitud.categoria.id)?.especialidadId ?? null);
@@ -221,7 +225,10 @@ function AsignarModal({ solicitud, onClose, onAsignada }: { solicitud: Solicitud
       .catch((e: unknown) => setError(mensajeDe(e)));
   }, [solicitud.categoria.id]);
 
-  const apto = (t: TecnicoOpcion) => t.disponible && t.especialidades.some((e) => e.especialidadId === especialidadId);
+  // Mismas tres condiciones que valida la API (regla 5): especialidad, disponibilidad y cupo.
+  const motivo = (t: CargaTecnico) => (!t.especialidades.some((e) => e.id === especialidadId) ? 'Sin especialidad'
+    : !t.disponible ? 'No disponible' : t.activas.length >= t.cargaMax ? 'Sin cupo' : '');
+  const apto = (t: CargaTecnico) => !motivo(t);
   const ordenados = [...(tecnicos ?? [])].sort((a, b) => Number(apto(b)) - Number(apto(a)));
 
   async function enviar(event: FormEvent) {
@@ -241,7 +248,7 @@ function AsignarModal({ solicitud, onClose, onAsignada }: { solicitud: Solicitud
     <Modal open title={reasignacion ? 'Reasignar técnico' : 'Asignar técnico'} onClose={onClose}>
       <form onSubmit={enviar} className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Se requiere la especialidad de <strong>{solicitud.categoria.nombre}</strong>, disponibilidad y carga por debajo del máximo. La API valida la carga al confirmar.
+          Se requiere la especialidad de <strong>{solicitud.categoria.nombre}</strong>, disponibilidad y carga por debajo del máximo. La API vuelve a validarlo al confirmar.
         </p>
         {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
         {!tecnicos ? <p role="status" className="text-sm text-muted-foreground">Cargando técnicos…</p> : (
@@ -251,10 +258,11 @@ function AsignarModal({ solicitud, onClose, onAsignada }: { solicitud: Solicitud
               <label key={t.id} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${apto(t) ? 'cursor-pointer hover:bg-accent' : 'opacity-60'}`}>
                 <span className="flex items-center gap-2">
                   <input type="radio" name="tecnico" value={t.id} checked={tecnicoId === t.id} disabled={!apto(t) || t.id === solicitud.tecnico?.id} onChange={() => setTecnicoId(t.id)} />
-                  <span><span className="font-medium">{t.usuario.nombre}</span><span className="block text-xs text-muted-foreground">{t.especialidades.map((e) => e.especialidad.nombre).join(', ')} · carga máx. {t.cargaMax}</span></span>
+                  <span><span className="font-medium">{t.nombre}</span><span className="block text-xs text-muted-foreground">{t.especialidades.map((e) => e.nombre).join(', ')}</span></span>
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  {t.id === solicitud.tecnico?.id ? 'Actual' : !t.disponible ? 'No disponible' : apto(t) ? 'Apto' : 'Sin especialidad'}
+                <span className="text-right text-xs text-muted-foreground">
+                  <span className="block tabular-nums">{t.activas.length} / {t.cargaMax} activas</span>
+                  {t.id === solicitud.tecnico?.id ? 'Actual' : motivo(t) || 'Apto'}
                 </span>
               </label>
             ))}
@@ -271,5 +279,70 @@ function AsignarModal({ solicitud, onClose, onAsignada }: { solicitud: Solicitud
         </div>
       </form>
     </Modal>
+  );
+}
+
+const kb = (bytes: number) => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`);
+
+function Adjuntos({ solicitudId, puedeSubir }: { solicitudId: number; puedeSubir: boolean }) {
+  const [lista, setLista] = useState<Adjunto[] | null>(null);
+  const [error, setError] = useState('');
+  const [subiendo, setSubiendo] = useState(false);
+
+  const cargar = useCallback(() => listarAdjuntos(solicitudId).then(setLista).catch((e: unknown) => setError(mensajeDe(e))), [solicitudId]);
+  useEffect(() => { queueMicrotask(() => { void cargar(); }); }, [cargar]);
+
+  async function elegir(archivos: FileList | null) {
+    if (!archivos?.length || !lista) return;
+    setError('');
+    setSubiendo(true);
+    let subidos = lista.length;
+    const problemas: string[] = [];
+    for (const archivo of Array.from(archivos)) {
+      const problema = problemaAdjunto(archivo, subidos);
+      if (problema) { problemas.push(problema); continue; }
+      try { await subirAdjunto(solicitudId, archivo); subidos += 1; } catch (e) { problemas.push(`${archivo.name}: ${mensajeDe(e)}`); }
+    }
+    setError(problemas.join(' '));
+    setSubiendo(false);
+    void cargar();
+  }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Adjuntos</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+        {!lista ? <p role="status" className="text-sm text-muted-foreground">Cargando adjuntos…</p> : !lista.length ? (
+          <p className="text-sm text-muted-foreground">No hay archivos adjuntos.</p>
+        ) : (
+          <ul className="space-y-2">
+            {lista.map((a) => (
+              <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <button type="button" className="text-left text-primary hover:underline" onClick={() => { void descargarAdjunto(solicitudId, a).catch((e: unknown) => setError(mensajeDe(e))); }}>
+                  {a.nombre}
+                </button>
+                <span className="text-xs text-muted-foreground">{kb(a.tamano)} · {a.subidoPor} · <span className="font-mono">{fechaHora(a.createdAt)}</span></span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {puedeSubir && (
+          <label className="block text-sm">
+            <span className="font-medium">Adjuntar archivos</span>
+            <span className="block text-xs text-muted-foreground">PDF, PNG, JPG, WEBP o TXT · hasta 5 MB cada uno · máximo 5 por solicitud</span>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.txt"
+              disabled={subiendo || !lista || lista.length >= 5}
+              className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm"
+              onChange={(e) => { void elegir(e.target.files); e.target.value = ''; }}
+            />
+            {subiendo && <span role="status" className="mt-1 block text-xs text-muted-foreground">Subiendo…</span>}
+          </label>
+        )}
+      </CardContent>
+    </Card>
   );
 }

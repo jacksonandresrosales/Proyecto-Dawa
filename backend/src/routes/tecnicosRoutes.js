@@ -9,6 +9,7 @@ import { tecnicoCreateSchema, tecnicoUpdateSchema } from '../validators/personas
 export const tecnicosRouter = Router();
 tecnicosRouter.use(auth, requireRole('admin', 'coordinador'));
 tecnicosRouter.get('/', validate(listSchema, 'query'), controller.listar);
+tecnicosRouter.get('/carga', controller.carga); // antes de /:id
 tecnicosRouter.post('/', validate(tecnicoCreateSchema), controller.crear);
 tecnicosRouter.get('/:id', validate(idSchema, 'params'), controller.obtener);
 tecnicosRouter.patch('/:id', validate(idSchema, 'params'), validate(tecnicoUpdateSchema), controller.actualizar);

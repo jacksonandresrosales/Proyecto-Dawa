@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ApiRequestError } from '@/api/admin';
-import { crearSolicitud, listarCategorias, listarClientes, listarPrioridades, listarSedes, type Opcion, type Sede } from '@/api/solicitudes';
+import { MAX_ADJUNTOS, crearSolicitud, listarCategorias, listarClientes, listarPrioridades, listarSedes, problemaAdjunto, subirAdjunto, type Opcion, type Sede } from '@/api/solicitudes';
 import { useAuth } from '@/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,19 @@ export default function NuevaSolicitudPage() {
   const [errores, setErrores] = useState<Errores>({});
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [archivos, setArchivos] = useState<File[]>([]);
+  const [errorArchivos, setErrorArchivos] = useState('');
+
+  function elegirArchivos(lista: FileList | null) {
+    const aceptados = [...archivos];
+    const problemas: string[] = [];
+    for (const archivo of Array.from(lista ?? [])) {
+      const problema = problemaAdjunto(archivo, aceptados.length);
+      if (problema) problemas.push(problema); else aceptados.push(archivo);
+    }
+    setArchivos(aceptados);
+    setErrorArchivos(problemas.join(' '));
+  }
   const clienteId = esCoordinador ? Number(valores.clienteId) : user?.clienteId ?? 0;
 
   useEffect(() => {
@@ -32,13 +45,20 @@ export default function NuevaSolicitudPage() {
 
   useEffect(() => {
     if (!clienteId) return;
+    // Una respuesta vieja (otro cliente, o el doble efecto de React en desarrollo) no debe tocar el formulario.
+    let vigente = true;
     listarSedes(clienteId)
       .then((lista) => {
+        if (!vigente) return;
         setSedes(lista);
-        // Con una sola sede no hay nada que elegir.
-        setValores((v) => ({ ...v, sedeId: lista.length === 1 ? String(lista[0].id) : '' }));
+        // Con una sola sede no hay nada que elegir; una sede ya elegida y válida se respeta.
+        setValores((v) => ({
+          ...v,
+          sedeId: lista.length === 1 ? String(lista[0].id) : lista.some((s) => String(s.id) === v.sedeId) ? v.sedeId : '',
+        }));
       })
-      .catch(() => setError('No se pudieron cargar las sedes.'));
+      .catch(() => { if (vigente) setError('No se pudieron cargar las sedes.'); });
+    return () => { vigente = false; };
   }, [clienteId]);
 
   const cambiar = (clave: keyof typeof valores) => (e: { target: { value: string } }) => {
@@ -73,7 +93,11 @@ export default function NuevaSolicitudPage() {
         equipo: valores.equipo.trim(),
         descripcion: valores.descripcion.trim(),
       });
-      navigate(`/solicitudes/${creada.id}`, { state: { aviso: `Solicitud ${creada.codigo} registrada.` } });
+      // La solicitud ya existe: un adjunto que falle no la deshace, solo se avisa.
+      const fallidos: string[] = [];
+      for (const archivo of archivos) await subirAdjunto(creada.id, archivo).catch(() => fallidos.push(archivo.name));
+      const aviso = `Solicitud ${creada.codigo} registrada.${fallidos.length ? ` No se pudo adjuntar: ${fallidos.join(', ')}. Puedes intentarlo desde aquí.` : ''}`;
+      navigate(`/solicitudes/${creada.id}`, { state: { aviso } });
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : 'No se pudo registrar la solicitud. Lo escrito se conserva.');
     } finally {
@@ -136,6 +160,30 @@ export default function NuevaSolicitudPage() {
               <textarea className={`${campo} h-32 py-2`} maxLength={4000} placeholder="¿Qué ocurre y desde cuándo?" value={valores.descripcion} onChange={cambiar('descripcion')} {...invalido('descripcion')} />
               {mensaje('descripcion')}
             </label>
+            <div className="text-sm">
+              <label className="font-medium" htmlFor="adjuntos">Adjuntos (opcional)</label>
+              <p className="text-xs text-muted-foreground">PDF, PNG, JPG, WEBP o TXT · hasta 5 MB cada uno · máximo 5</p>
+              <input
+                id="adjuntos"
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.txt"
+                disabled={archivos.length >= MAX_ADJUNTOS}
+                className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm"
+                onChange={(e) => { elegirArchivos(e.target.files); e.target.value = ''; }}
+              />
+              {errorArchivos && <p className="mt-1 text-sm text-destructive">{errorArchivos}</p>}
+              {archivos.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {archivos.map((a, i) => (
+                    <li key={a.name + i} className="flex items-center justify-between gap-2">
+                      <span className="truncate">{a.name}</span>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setArchivos(archivos.filter((_, j) => j !== i))}>Quitar</Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <div className="flex gap-3">
               <Button type="submit" disabled={guardando}>{guardando ? 'Registrando…' : 'Registrar solicitud'}</Button>
               <Button asChild variant="outline"><Link to="/solicitudes">Cancelar</Link></Button>

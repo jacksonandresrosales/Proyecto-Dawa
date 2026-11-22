@@ -98,6 +98,9 @@ export default function Campana() {
                   ))}
                 </ul>
               )}
+          <button type="button" className="block w-full border-t px-4 py-2.5 text-center text-sm text-primary hover:bg-accent" onClick={() => { setAbierta(false); navigate('/notificaciones'); }}>
+            Ver todas las notificaciones
+          </button>
         </div>
       )}
     </div>

@@ -201,3 +201,47 @@ describe('dashboard', () => {
     expect((await api().get('/api/dashboard/indicadores').set(bearer('clienteA'))).status).toBe(403);
   });
 });
+
+describe('adjuntos y carga de técnicos', () => {
+  const subir = (id, rol, contenido, tipo = 'application/pdf', nombre = 'informe.pdf') =>
+    api().post(`/api/solicitudes/${id}/adjuntos?nombre=${encodeURIComponent(nombre)}`).set(bearer(rol)).set('Content-Type', tipo).send(contenido);
+
+  it('sube, lista y descarga adjuntos con sus validaciones', async () => {
+    const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
+    const id = body.data.id;
+
+    const subido = await subir(id, 'clienteA', Buffer.from('%PDF-1.4 prueba'));
+    expect(subido.status).toBe(201);
+    expect(subido.body.data).toMatchObject({ nombre: 'informe.pdf', mime: 'application/pdf', tamano: 15 });
+
+    expect((await subir(id, 'clienteA', Buffer.from('MZ'), 'application/x-msdownload', 'virus.exe')).body.error.code).toBe('TIPO_NO_PERMITIDO');
+    expect((await subir(id, 'clienteA', Buffer.alloc(6 * 1024 * 1024, 1))).status).toBe(413);
+    expect((await subir(id, 'clienteB', Buffer.from('x'), 'text/plain', 'a.txt')).status).toBe(404); // regla 3
+    expect((await subir(id, 'tecnico', Buffer.from('x'), 'text/plain', 'a.txt')).status).toBe(403);
+
+    const lista = await api().get(`/api/solicitudes/${id}/adjuntos`).set(bearer('coordinador'));
+    expect(lista.body.data).toHaveLength(1);
+    const descarga = await api().get(`/api/solicitudes/${id}/adjuntos/${subido.body.data.id}`).set(bearer('coordinador')).buffer(true).parse((res, cb) => {
+      const partes = []; res.on('data', (c) => partes.push(c)); res.on('end', () => cb(null, Buffer.concat(partes)));
+    });
+    expect(descarga.headers['content-disposition']).toContain('attachment');
+    expect(descarga.body.toString()).toBe('%PDF-1.4 prueba');
+
+    for (let i = 0; i < 4; i += 1) await subir(id, 'clienteA', Buffer.from(`nota ${i}`), 'text/plain', `nota${i}.txt`);
+    expect((await subir(id, 'clienteA', Buffer.from('sexta'), 'text/plain', 'sexta.txt')).body.error.code).toBe('LIMITE_ADJUNTOS');
+  });
+
+  it('muestra la carga actual de cada técnico con sus solicitudes activas', async () => {
+    const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
+    await cambiar(body.data.id, 'coordinador', { estado: 'aprobada', version: 1 });
+    await api().post(`/api/solicitudes/${body.data.id}/asignaciones`).set(bearer('coordinador')).send({ tecnicoId: ids.tecnico });
+
+    const carga = await api().get('/api/tecnicos/carga').set(bearer('coordinador'));
+    expect(carga.status).toBe(200);
+    expect(carga.body.data).toEqual([expect.objectContaining({
+      id: ids.tecnico, cargaMax: 5, especialidades: [expect.objectContaining({ nombre: 'Redes' })],
+      activas: [expect.objectContaining({ id: body.data.id, estado: 'asignada' })],
+    })]);
+    expect((await api().get('/api/tecnicos/carga').set(bearer('tecnico'))).status).toBe(403);
+  });
+});

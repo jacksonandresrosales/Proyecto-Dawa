@@ -28,6 +28,9 @@ export function errorHandler(err, req, res, next) {
   if (err.code === 'P2025') {
     return res.status(404).json({ error: { code: 'NO_ENCONTRADO', message: 'El registro solicitado no existe' } });
   }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: { code: 'ARCHIVO_DEMASIADO_GRANDE', message: 'El contenido supera el tamaño permitido (5 MB por archivo)' } });
+  }
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: { code: 'JSON_INVALIDO', message: 'El cuerpo no es JSON válido' } });
   }

@@ -4,6 +4,7 @@ import { paginar } from '../utils/paginacion.js';
 import { generarPasswordTemporal } from '../utils/credenciales.js';
 import * as repository from '../repositories/tecnicosRepository.js';
 import { buscarUsuarioPorEmail, rolPorNombre } from '../repositories/clientesRepository.js';
+import { ESTADOS_ACTIVOS } from './transiciones.js';
 
 const duplicado = (campo, mensaje) => new AppError(409, 'DUPLICADO', mensaje, [{ campo, mensaje }]);
 const whereLista = (query) => ({ ...(query.activo === undefined ? {} : { usuario: { activo: query.activo === 'true' } }), ...(query.q ? { OR: [{ usuario: { nombre: { contains: query.q, mode: 'insensitive' } } }, { usuario: { email: { contains: query.q, mode: 'insensitive' } } }] } : {}) });
@@ -36,3 +37,13 @@ export async function actualizar(id, values) {
   return repository.actualizarTecnico(id, { usuario: Object.keys(usuarioData).length ? { id: actual.usuarioId, data: usuarioData } : null, tecnico: tecnicoData, especialidadIds: values.especialidadIds });
 }
 export async function eliminar(id) { await obtener(id); if (await repository.contarEspecialidades(id)) throw new AppError(409, 'EN_USO', 'El técnico tiene especialidades y solo puede desactivarse'); return repository.eliminarTecnico(id); }
+export async function carga() {
+  return (await repository.cargaTecnicos(ESTADOS_ACTIVOS)).map((t) => ({
+    id: t.id,
+    nombre: t.usuario.nombre,
+    disponible: t.disponible,
+    cargaMax: t.cargaMax,
+    especialidades: t.especialidades.map((e) => ({ id: e.especialidadId, nombre: e.especialidad.nombre })),
+    activas: t.solicitudes.map((s) => ({ id: s.id, codigo: s.codigo, estado: s.estado.codigo, fechaLimite: s.fechaLimite })),
+  }));
+}

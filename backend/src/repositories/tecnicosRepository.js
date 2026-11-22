@@ -36,3 +36,20 @@ export const eliminarTecnico = (id) => prisma.$transaction(async (tx) => {
 });
 export const contarEspecialidades = (id) => prisma.tecnicoEspecialidad.count({ where: { tecnicoId: id } });
 export const especialidadesActivas = (ids) => prisma.especialidad.findMany({ where: { id: { in: ids }, activo: true }, select: { id: true } });
+// Carga actual de cada técnico con cuenta vigente: sus solicitudes activas, la más urgente primero.
+export const cargaTecnicos = (estadosActivos) => prisma.tecnico.findMany({
+  where: { usuario: { activo: true } },
+  select: {
+    id: true,
+    disponible: true,
+    cargaMax: true,
+    usuario: { select: { nombre: true } },
+    especialidades: { select: { especialidadId: true, especialidad: { select: { nombre: true } } } },
+    solicitudes: {
+      where: { estado: { codigo: { in: estadosActivos } } },
+      select: { id: true, codigo: true, fechaLimite: true, estado: { select: { codigo: true } } },
+      orderBy: { fechaLimite: 'asc' },
+    },
+  },
+  orderBy: { usuario: { nombre: 'asc' } },
+});
