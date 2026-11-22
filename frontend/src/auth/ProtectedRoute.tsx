@@ -6,13 +6,13 @@ function LoadingSession() {
 }
 
 export function RequireUser() {
-  const { user, loading, initializationError } = useAuth();
+  const { user, loading, initializationError, sessionNotice } = useAuth();
   const location = useLocation();
   if (loading) return <LoadingSession />;
   if (initializationError) {
     return <main className="mx-auto max-w-xl p-8 text-center" role="alert">{initializationError}</main>;
   }
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location, notice: sessionNotice || undefined }} />;
   return <Outlet />;
 }
 
@@ -35,7 +35,9 @@ export function RequireRoles({ roles }: { roles: UserRole[] }) {
 
 export function PublicOnlyRoute() {
   const { user, loading } = useAuth();
+  const from = (useLocation().state as { from?: { pathname?: string } } | null)?.from?.pathname;
   if (loading) return <LoadingSession />;
-  if (user) return <Navigate to={user.debeCambiarPassword ? '/primer-acceso' : '/inicio'} replace />;
+  // Tras iniciar sesión, vuelve a la pantalla que pidió el login (por ejemplo, al vencer la sesión).
+  if (user) return <Navigate to={user.debeCambiarPassword ? '/primer-acceso' : from || '/inicio'} replace />;
   return <Outlet />;
 }

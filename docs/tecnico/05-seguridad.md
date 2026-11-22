@@ -5,6 +5,7 @@
 - Contraseñas guardadas con **bcrypt** (costo 10). Entre 8 y 72 bytes, con al menos una letra y un número.
 - `POST /auth/login` devuelve un **JWT** firmado con `JWT_SECRET`, con `sub` (id del usuario), `rol` y expiración de 8 horas.
 - El frontend guarda el token en memoria y en `sessionStorage` con la clave `servigest_token`, y lo envía en `Authorization: Bearer`.
+- Si una petición con sesión abierta recibe 401 (token vencido o inválido, o cuenta desactivada), `apiRequest` borra el token y el frontend vuelve al login con un aviso que explica el motivo. Al iniciar sesión de nuevo, regresa a la pantalla donde estaba.
 - Cierre de sesión: el frontend descarta el token; el endpoint no mantiene sesiones en servidor. El middleware `auth` consulta en cada petición que el usuario siga activo, así que desactivar un usuario corta su acceso de inmediato.
 - El mensaje de error del login es el mismo para "correo no existe" y "contraseña incorrecta".
 - Límite de intentos en `/auth/login` y `/auth/forgot` (`express-rate-limit`).

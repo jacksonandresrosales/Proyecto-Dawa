@@ -71,7 +71,8 @@ export default function Campana() {
         )}
       </button>
       {abierta && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-xl border bg-card shadow-lg" role="dialog" aria-label="Notificaciones">
+        // En celular el panel ocupa el ancho de la pantalla; anclado a la campana se saldría por la izquierda.
+        <div className="fixed inset-x-4 top-16 z-20 rounded-xl border bg-card shadow-lg sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-80" role="dialog" aria-label="Notificaciones">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <span className="text-sm font-semibold">Notificaciones</span>
             {noLeidas > 0 && (

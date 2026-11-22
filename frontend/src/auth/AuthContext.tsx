@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ApiRequestError, apiRequest, readApiToken, saveApiToken } from '@/api/admin';
+import { ApiRequestError, EVENTO_SESION_VENCIDA, apiRequest, readApiToken, saveApiToken } from '@/api/admin';
 
 export type UserRole = 'admin' | 'coordinador' | 'tecnico' | 'cliente';
 export type AuthUser = {
@@ -20,6 +20,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   initializationError: string;
+  sessionNotice: string;
   login: (email: string, password: string) => Promise<AuthUser>;
   establishSession: (session: AuthSession) => void;
   logout: () => Promise<void>;
@@ -35,11 +36,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(Boolean(readApiToken()));
   const [initializationError, setInitializationError] = useState('');
 
+  const [sessionNotice, setSessionNotice] = useState('');
+
   const establishSession = useCallback((session: AuthSession) => {
     saveApiToken(session.token);
     setToken(session.token);
     setUser(session.usuario);
     setInitializationError('');
+    setSessionNotice('');
+  }, []);
+
+  // apiRequest ya borró el token; aquí se olvida al usuario para que las rutas protegidas lleven al login.
+  useEffect(() => {
+    const expire = (event: Event) => {
+      const code = (event as CustomEvent<string | undefined>).detail;
+      setSessionNotice(code === 'CUENTA_INACTIVA'
+        ? 'Tu cuenta fue desactivada. Si crees que es un error, contacta al administrador.'
+        : 'Tu sesión venció. Vuelve a iniciar sesión para continuar.');
+      setToken('');
+      setUser(null);
+    };
+    window.addEventListener(EVENTO_SESION_VENCIDA, expire);
+    return () => window.removeEventListener(EVENTO_SESION_VENCIDA, expire);
   }, []);
 
   useEffect(() => {
@@ -106,8 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({
-    token, user, loading, initializationError, login, establishSession, logout, refreshUser, setUser,
-  }), [token, user, loading, initializationError, login, establishSession, logout, refreshUser]);
+    token, user, loading, initializationError, sessionNotice, login, establishSession, logout, refreshUser, setUser,
+  }), [token, user, loading, initializationError, sessionNotice, login, establishSession, logout, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -41,6 +41,8 @@ Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (i
 | T-15 Lista, nueva solicitud y detalle | Hecho | Pantallas de los cuatro roles según el diseño de Claude Design: filtros, paginación, acciones por estado y rol, modales con comentario o resolución, historial y estados de carga, vacío y error |
 | T-16 Modal asignar y tablero de carga | En curso | El modal de asignar y reasignar está hecho; falta el tablero de carga (necesita `GET /tecnicos/carga`) |
 | T-20 Dashboard | Hecho | Indicadores del 5.6 con filtros por periodo, categoría, técnico y cliente; gráfico de evolución con tabla accesible |
+| Diseño responsivo | Hecho | Revisadas a 375 px todas las pantallas, sin desborde horizontal: menú en una fila deslizable, solicitudes como tarjetas y panel de notificaciones a lo ancho |
+| Sesión vencida | Hecho | Un 401 cierra la sesión y lleva al login con aviso (pantallas E08 y E11 del diseño) |
 | T-12 OpenAPI, T-18 adjuntos, T-22 a T-25 | Pendiente | |
 
 ## Backlog inicial
