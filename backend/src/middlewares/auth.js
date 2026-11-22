@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { prisma } from '../repositories/prisma.js';
+import { buscarUsuario } from '../repositories/authRepository.js';
 import { AppError } from '../utils/AppError.js';
 
 export async function auth(req, res, next) {
@@ -22,10 +22,7 @@ export async function auth(req, res, next) {
   if (!Number.isSafeInteger(id) || id < 1) {
     return next(new AppError(401, 'TOKEN_INVALIDO', 'El token no es válido o venció'));
   }
-  const usuario = await prisma.usuario.findUnique({
-    where: { id },
-    include: { rol: true, cliente: true, tecnico: true },
-  });
+  const usuario = await buscarUsuario(id);
   if (!usuario || !usuario.activo || (usuario.cliente && !usuario.cliente.activo)) {
     return next(new AppError(401, 'CUENTA_INACTIVA', 'Tu cuenta no está activa'));
   }
