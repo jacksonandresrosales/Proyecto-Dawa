@@ -112,6 +112,22 @@ describe('solicitudes', () => {
     expect((await api().get(`/api/clientes/${ids.clienteA}/sedes`).set(bearer('tecnico'))).status).toBe(403);
   });
 
+  it('edita las sedes de un cliente con solicitudes sin romper las existentes', async () => {
+    const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
+    const editado = await api().patch(`/api/clientes/${ids.clienteA}`).set(bearer('coordinador'))
+      .send({ sedes: [{ nombre: 'Sucursal', direccion: 'Vía Daule' }] });
+    expect(editado.status).toBe(200);
+    expect(editado.body.data.sedes.map((s) => s.nombre)).toEqual(['Sucursal']);
+    // La sede quitada queda desactivada y la solicitud la sigue referenciando.
+    expect(await prisma.sede.findUnique({ where: { id: ids.sedeA } })).toMatchObject({ activo: false });
+    expect((await api().get(`/api/solicitudes/${body.data.id}`).set(bearer('clienteA'))).body.data.sede.id).toBe(ids.sedeA);
+    expect((await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA))).body.error.code).toBe('SEDE_INVALIDA');
+
+    const restaurada = await api().patch(`/api/clientes/${ids.clienteA}`).set(bearer('coordinador'))
+      .send({ sedes: [{ nombre: 'Matriz', direccion: 'Centro nuevo' }, { nombre: 'Sucursal', direccion: 'Vía Daule' }] });
+    expect(restaurada.body.data.sedes).toEqual(expect.arrayContaining([expect.objectContaining({ id: ids.sedeA, direccion: 'Centro nuevo' })]));
+  });
+
   it('impide que el técnico vea o cambie solicitudes que no tiene asignadas', async () => {
     const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
     expect((await api().get(`/api/solicitudes/${body.data.id}`).set(bearer('tecnico'))).status).toBe(404);

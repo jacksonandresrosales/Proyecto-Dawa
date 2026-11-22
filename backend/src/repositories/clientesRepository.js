@@ -11,7 +11,7 @@ const include = {
       rol: { select: { nombre: true } },
     },
   },
-  sedes: { orderBy: { nombre: 'asc' } },
+  sedes: { where: { activo: true }, orderBy: { nombre: 'asc' } },
 };
 export const listarClientes = async (where, skip, take) => {
   const [data, total] = await Promise.all([prisma.cliente.findMany({ where, skip, take, include, orderBy: { razonSocial: 'asc' } }), prisma.cliente.count({ where })]);
@@ -31,7 +31,17 @@ export const crearCliente = (data) => prisma.$transaction(async (tx) => {
 export const actualizarCliente = (id, data) => prisma.$transaction(async (tx) => {
   if (data.usuario) await tx.usuario.update({ where: { id: data.usuario.id }, data: data.usuario.data });
   await tx.cliente.update({ where: { id }, data: data.cliente });
-  if (data.sedes) { await tx.sede.deleteMany({ where: { clienteId: id } }); await tx.sede.createMany({ data: data.sedes.map((sede) => ({ ...sede, clienteId: id })) }); }
+  if (data.sedes) {
+    // Las sedes que salen de la lista se desactivan en vez de borrarse: pueden tener solicitudes.
+    await tx.sede.updateMany({ where: { clienteId: id, nombre: { notIn: data.sedes.map((sede) => sede.nombre) } }, data: { activo: false } });
+    for (const sede of data.sedes) {
+      await tx.sede.upsert({
+        where: { clienteId_nombre: { clienteId: id, nombre: sede.nombre } },
+        update: { direccion: sede.direccion, activo: true },
+        create: { ...sede, clienteId: id },
+      });
+    }
+  }
   return tx.cliente.findUnique({ where: { id }, include });
 });
 export const eliminarCliente = (id) => prisma.$transaction(async (tx) => {
