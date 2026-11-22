@@ -6,6 +6,9 @@ import AdminPage from '@/pages/AdminPage';
 import { ForgotPasswordPage, InitialSetupPage, LoginPage, PasswordChangePage, ProfilePage, ResetPasswordPage } from '@/pages/AuthPages';
 import HomePage from '@/pages/HomePage';
 import UsuariosPage from '@/pages/UsuariosPage';
+import NuevaSolicitudPage from '@/pages/NuevaSolicitudPage';
+import SolicitudDetallePage from '@/pages/SolicitudDetallePage';
+import SolicitudesPage from '@/pages/SolicitudesPage';
 
 function AppRoutes() {
   return (
@@ -23,6 +26,11 @@ function AppRoutes() {
             <Route path="/" element={<Navigate to="/inicio" replace />} />
             <Route path="/inicio" element={<HomePage />} />
             <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/solicitudes" element={<SolicitudesPage />} />
+            <Route path="/solicitudes/:id" element={<SolicitudDetallePage />} />
+            <Route element={<RequireRoles roles={['coordinador', 'cliente']} />}>
+              <Route path="/solicitudes/nueva" element={<NuevaSolicitudPage />} />
+            </Route>
             <Route element={<RequireRoles roles={['admin', 'coordinador']} />}>
               <Route path="/admin" element={<AdminPage />} />
             </Route>

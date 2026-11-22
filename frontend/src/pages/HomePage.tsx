@@ -26,8 +26,10 @@ export default function HomePage() {
           <CardDescription>Accede a las funciones permitidas para tu rol y mantén tu perfil actualizado.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
+          <Button asChild><Link to="/solicitudes">{user?.rol === 'tecnico' ? 'Ver mis asignadas' : 'Ver solicitudes'}</Link></Button>
+          {(user?.rol === 'cliente' || user?.rol === 'coordinador') && <Button asChild variant="outline"><Link to="/solicitudes/nueva">Nueva solicitud</Link></Button>}
           <Button asChild variant="outline"><Link to="/perfil">Revisar mi perfil</Link></Button>
-          {canManage && <Button asChild><Link to="/admin">Abrir administración</Link></Button>}
+          {canManage && <Button asChild variant="outline"><Link to="/admin">Abrir administración</Link></Button>}
           {user?.rol === 'admin' && <Button asChild variant="secondary"><Link to="/admin/usuarios">Gestionar usuarios</Link></Button>}
         </CardContent>
       </Card>

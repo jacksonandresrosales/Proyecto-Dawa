@@ -213,3 +213,24 @@
     @apply bg-background text-base text-foreground antialiased;
   }
 }
+
+/* Tonos de estado: docs/ux/06-sistema-visual.md. En oscuro el fondo es el punto al 14 %. */
+:root {
+  --tone-neutral-bg: #F2F2F7; --tone-neutral-fg: #636366; --tone-neutral-dot: #AEAEB2;
+  --tone-warning-bg: #FFF7E0; --tone-warning-fg: #8A5F00; --tone-warning-dot: #F2A900;
+  --tone-accent-bg: #EAF1FF; --tone-accent-fg: #07479E; --tone-accent-dot: #2567FF;
+  --tone-info-bg: #EAF1FF; --tone-info-fg: #1B4FE0; --tone-info-dot: #2567FF;
+  --tone-review-bg: #FFF1DE; --tone-review-fg: #9A5200; --tone-review-dot: #FF9500;
+  --tone-success-bg: #E7F7EC; --tone-success-fg: #1B7A3A; --tone-success-dot: #34C759;
+  --tone-danger-bg: #FFEBE9; --tone-danger-fg: #C4281C; --tone-danger-dot: #FF3B30;
+  --tone-critical-bg: #D92D20; --tone-critical-fg: #FFFFFF; --tone-critical-dot: #FFFFFF;
+}
+.dark {
+  --tone-neutral-bg: color-mix(in srgb, #AEAEB2 14%, transparent); --tone-neutral-fg: #A6A6AE;
+  --tone-warning-bg: color-mix(in srgb, #F2A900 14%, transparent); --tone-warning-fg: #F5C451;
+  --tone-accent-bg: color-mix(in srgb, #2567FF 14%, transparent); --tone-accent-fg: #8DB4FF;
+  --tone-info-bg: color-mix(in srgb, #2567FF 14%, transparent); --tone-info-fg: #8DB4FF;
+  --tone-review-bg: color-mix(in srgb, #FF9500 14%, transparent); --tone-review-fg: #FFB35C;
+  --tone-success-bg: color-mix(in srgb, #34C759 14%, transparent); --tone-success-fg: #5BD68F;
+  --tone-danger-bg: color-mix(in srgb, #FF3B30 14%, transparent); --tone-danger-fg: #FF7A70;
+}

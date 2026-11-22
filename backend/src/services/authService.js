@@ -17,6 +17,7 @@ function usuarioPublico(usuario) {
     activo: usuario.activo,
     rol: usuario.rol.nombre,
     debeCambiarPassword: usuario.debeCambiarPassword,
+    clienteId: usuario.cliente?.id ?? null,
   };
 }
 

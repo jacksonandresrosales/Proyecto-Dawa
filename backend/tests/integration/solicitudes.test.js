@@ -103,6 +103,15 @@ describe('solicitudes', () => {
     expect(lista.body.meta.total).toBe(1);
   });
 
+  it('da al cliente su clienteId y solo sus sedes para registrar', async () => {
+    const me = await api().get('/api/auth/me').set(bearer('clienteA'));
+    expect(me.body.data.clienteId).toBe(ids.clienteA);
+    const propias = await api().get(`/api/clientes/${ids.clienteA}/sedes`).set(bearer('clienteA'));
+    expect(propias.body.data).toEqual([expect.objectContaining({ id: ids.sedeA, nombre: 'Matriz' })]);
+    expect((await api().get(`/api/clientes/${ids.clienteA}/sedes`).set(bearer('clienteB'))).status).toBe(404);
+    expect((await api().get(`/api/clientes/${ids.clienteA}/sedes`).set(bearer('tecnico'))).status).toBe(403);
+  });
+
   it('impide que el técnico vea o cambie solicitudes que no tiene asignadas', async () => {
     const { body } = await api().post('/api/solicitudes').set(bearer('clienteA')).send(nueva(ids.sedeA));
     expect((await api().get(`/api/solicitudes/${body.data.id}`).set(bearer('tecnico'))).status).toBe(404);

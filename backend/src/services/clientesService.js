@@ -17,6 +17,11 @@ export async function obtener(id) {
   if (!cliente) throw new AppError(404, 'NO_ENCONTRADO', 'Cliente no encontrado');
   return cliente;
 }
+// Sedes vigentes para registrar solicitudes. Un cliente solo ve las de su organización.
+export async function sedes(id, usuario) {
+  if (usuario.rol === 'cliente' && usuario.clienteId !== id) throw new AppError(404, 'NO_ENCONTRADO', 'Cliente no encontrado');
+  return repository.listarSedesVigentes(id);
+}
 export async function crear(values) {
   const email = values.email.toLowerCase();
   if (await repository.buscarUsuarioPorEmail(email)) throw duplicado('email', 'Ya existe un usuario con este correo');

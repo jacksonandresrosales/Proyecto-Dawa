@@ -29,6 +29,7 @@ export default function AppShell() {
           <Link className="text-lg font-semibold text-primary" to="/inicio">ServiGest</Link>
           <nav className="flex flex-wrap items-center gap-1" aria-label="Navegación principal">
             <NavLink className={linkStyle} to="/inicio">Inicio</NavLink>
+            <NavLink className={linkStyle} to="/solicitudes">Solicitudes</NavLink>
             {canManage && <NavLink className={linkStyle} to="/admin">Clientes y catálogos</NavLink>}
             {user?.rol === 'admin' && <NavLink className={linkStyle} to="/admin/usuarios">Usuarios</NavLink>}
             <NavLink className={linkStyle} to="/perfil">Mi perfil</NavLink>

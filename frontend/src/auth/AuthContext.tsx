@@ -10,6 +10,7 @@ export type AuthUser = {
   rol: UserRole;
   activo: boolean;
   debeCambiarPassword: boolean;
+  clienteId?: number | null;
 };
 
 export type AuthSession = { token: string; usuario: AuthUser };
