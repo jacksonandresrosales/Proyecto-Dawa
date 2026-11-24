@@ -28,6 +28,11 @@ export const listarSolicitudes = async (where, skip, take) => {
   ]);
   return { data, total };
 };
+export const listarSolicitudesParaFiltro = (where) => prisma.solicitud.findMany({
+  where,
+  include,
+  orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+});
 export const buscarSolicitud = (where) => prisma.solicitud.findFirst({ where, include });
 export const listarHistorial = (solicitudId) => prisma.historialEstado.findMany({
   where: { solicitudId },

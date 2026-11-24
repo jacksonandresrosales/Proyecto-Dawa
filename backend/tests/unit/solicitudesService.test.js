@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const repository = {
   buscarSolicitud: vi.fn(),
+  listarSolicitudes: vi.fn(),
+  listarSolicitudesParaFiltro: vi.fn(),
   cambiarEstado: vi.fn(),
   idsCoordinadores: vi.fn(),
   buscarTecnico: vi.fn(),
@@ -127,5 +129,45 @@ describe('asignación (regla 5)', () => {
     repository.buscarTecnico.mockResolvedValue(tecnicoApto());
     await expect(asignaciones.asignar(1, { tecnicoId: 8 }, coordinador))
       .rejects.toMatchObject({ status: 422, code: 'JUSTIFICACION_REQUERIDA' });
+  });
+});
+
+describe('listado con filtro de plazo', () => {
+  it('reutiliza estadoPlazo y excluye las solicitudes canceladas', () => {
+    const vencida = solicitud({
+      estado: { codigo: 'en_proceso' },
+      createdAt: new Date('2026-01-10T08:00:00Z'),
+      fechaLimite: new Date('2026-01-10T16:00:00Z'),
+      resolvedAt: null,
+    });
+    const cancelada = solicitud({
+      estado: { codigo: 'cancelada' },
+      createdAt: new Date('2026-01-10T08:00:00Z'),
+      fechaLimite: new Date('2026-01-10T16:00:00Z'),
+      resolvedAt: null,
+    });
+
+    const ahora = new Date('2026-11-23T22:00:00Z');
+    expect(service.coincidePlazo(vencida, 'vencida', ahora)).toBe(true);
+    expect(service.coincidePlazo(cancelada, 'vencida', ahora)).toBe(false);
+  });
+
+  it('filtra candidatas antes de aplicar total y paginación', async () => {
+    const candidatas = [1, 2, 3].map((id) => solicitud({
+      id,
+      codigo: `SOL-2026-${String(id).padStart(6, '0')}`,
+      createdAt: new Date('2026-01-10T08:00:00Z'),
+      fechaLimite: new Date('2026-01-10T16:00:00Z'),
+    }));
+    repository.listarSolicitudesParaFiltro.mockResolvedValue(candidatas);
+
+    const result = await service.listar(
+      { plazo: 'vencida', page: '1', limit: '2' },
+      { id: 10, rol: 'coordinador' },
+    );
+
+    expect(repository.listarSolicitudesParaFiltro).toHaveBeenCalledWith({ AND: [{}, {}] });
+    expect(result.data).toHaveLength(2);
+    expect(result.meta).toEqual({ page: 1, limit: 2, total: 3 });
   });
 });
