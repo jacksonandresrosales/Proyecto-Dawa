@@ -52,6 +52,13 @@ export const filtros = (q) => ({
   ...(q.q ? { OR: ['codigo', 'equipo', 'descripcion'].map((campo) => ({ [campo]: { contains: q.q, mode: 'insensitive' } })) } : {}),
 });
 
+export const coincidePlazo = (solicitud, plazo, ahora = new Date()) => estadoPlazo({
+  estado: solicitud.estado.codigo,
+  createdAt: solicitud.createdAt,
+  fechaLimite: solicitud.fechaLimite,
+  resolvedAt: solicitud.resolvedAt,
+}, ahora) === plazo;
+
 export async function buscarVisible(id, usuario) {
   const solicitud = await repository.buscarSolicitud({ AND: [{ id }, alcance(usuario)] });
   if (!solicitud) throw noEncontrada();
@@ -60,9 +67,22 @@ export async function buscarVisible(id, usuario) {
 
 export async function listar(query, usuario) {
   const pagination = paginar(query);
-  // AND: un filtro ?cliente= no puede ampliar el alcance del rol.
-  const result = await repository.listarSolicitudes({ AND: [filtros(query), alcance(usuario)] }, pagination.skip, pagination.take);
+  const where = { AND: [filtros(query), alcance(usuario)] };
   const ahora = new Date();
+
+  if (query.plazo) {
+    const candidatas = await repository.listarSolicitudesParaFiltro(where);
+    const filtradas = candidatas.filter((solicitud) => coincidePlazo(solicitud, query.plazo, ahora));
+    const total = filtradas.length;
+    const data = filtradas
+      .slice(pagination.skip, pagination.skip + pagination.take)
+      .map((solicitud) => presentar(solicitud, ahora));
+
+    return { data, meta: { page: pagination.page, limit: pagination.limit, total } };
+  }
+
+  // AND: un filtro ?cliente= no puede ampliar el alcance del rol.
+  const result = await repository.listarSolicitudes(where, pagination.skip, pagination.take);
   return { data: result.data.map((s) => presentar(s, ahora)), meta: { page: pagination.page, limit: pagination.limit, total: result.total } };
 }
 
