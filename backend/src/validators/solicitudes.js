@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { listSchema } from './common.js';
 
 const ESTADOS = ['registrada', 'aprobada', 'asignada', 'en_proceso', 'pendiente_info', 'resuelta', 'cerrada', 'cancelada'];
+const PLAZOS = ['a_tiempo', 'por_vencer', 'vencida', 'cumplida', 'incumplida'];
 const id = z.number().int().positive();
 const idEnQuery = z.coerce.number().int().positive();
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato AAAA-MM-DD');
@@ -9,6 +10,7 @@ const texto = (max) => z.string().trim().min(1, 'Es obligatorio').max(max);
 
 export const solicitudListSchema = listSchema.omit({ activo: true }).extend({
   estado: z.enum(ESTADOS).optional(),
+  plazo: z.enum(PLAZOS).optional(),
   prioridad: idEnQuery.optional(),
   categoria: idEnQuery.optional(),
   cliente: idEnQuery.optional(),
