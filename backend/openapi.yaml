@@ -4,19 +4,29 @@ info:
   version: 1.0.0
   description: |
     API REST de ServiGest. Las rutas de la API usan el prefijo `/api`.
+    Los errores tienen el formato `{ error: { code, message, details? } }`.
 servers:
   - url: /api
     description: Servidor actual
+security:
+  - bearerAuth: []
 tags:
   - name: Sistema
-    description: Estado del servicio
+  - name: Autenticación
+  - name: Usuarios
+  - name: Clientes
+  - name: Técnicos
+  - name: Catálogos
+  - name: Solicitudes
+  - name: Notificaciones
+  - name: Dashboard
 paths:
   /health:
     get:
-      tags:
-        - Sistema
+      tags: [Sistema]
       summary: Comprobar el estado del servicio y la base de datos
       operationId: getHealth
+      security: []
       responses:
         '200':
           description: Servicio y base de datos disponibles
@@ -30,24 +40,1716 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+  /openapi.yaml:
+    get:
+      tags: [Sistema]
+      summary: Obtener este contrato OpenAPI en YAML
+      operationId: getOpenApiDocument
+      security: []
+      responses:
+        '200':
+          description: Documento OpenAPI
+          content:
+            text/yaml:
+              schema:
+                type: string
+  /docs/:
+    get:
+      tags: [Sistema]
+      summary: Interfaz interactiva Swagger UI
+      operationId: getSwaggerUi
+      security: []
+      responses:
+        '200':
+          description: Página Swagger UI
+          content:
+            text/html:
+              schema:
+                type: string
+  /auth/setup-status:
+    get:
+      tags: [Autenticación]
+      summary: Consultar si falta crear el administrador inicial
+      operationId: getSetupStatus
+      security: []
+      responses:
+        '200':
+          description: Estado de la configuración inicial
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetupStatusResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/setup:
+    post:
+      tags: [Autenticación]
+      summary: Crear el primer administrador e iniciar sesión
+      operationId: createInitialAdmin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitialSetupRequest'
+      responses:
+        '201':
+          description: Administrador creado y sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '404':
+          description: Configuración inicial no disponible en producción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+  /auth/login:
+    post:
+      tags: [Autenticación]
+      summary: Iniciar sesión
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '401':
+          description: Credenciales inválidas o cuenta inactiva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+  /auth/logout:
+    post:
+      tags: [Autenticación]
+      summary: Cerrar la sesión local descartando el token
+      operationId: logout
+      responses:
+        '204':
+          description: Sesión cerrada
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /auth/me:
+    get:
+      tags: [Autenticación]
+      summary: Obtener el perfil del usuario autenticado
+      operationId: getMyProfile
+      responses:
+        '200':
+          description: Perfil actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    patch:
+      tags: [Autenticación]
+      summary: Actualizar el perfil o cambiar la contraseña
+      operationId: updateMyProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          description: Datos inválidos o contraseña actual incorrecta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/forgot:
+    post:
+      tags: [Autenticación]
+      summary: Solicitar restablecimiento de contraseña
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Respuesta neutra, exista o no el correo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+  /auth/reset:
+    post:
+      tags: [Autenticación]
+      summary: Restablecer la contraseña usando un token
+      operationId: resetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Contraseña restablecida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          description: Token inválido, vencido o ya usado; o cuerpo inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      operationId: listUsers
+      description: Solo admin. Filtros admitidos `q`, `rol` y `activo`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+        - name: rol
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+      responses:
+        '200':
+          description: Página de usuarios
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario administrador o coordinador
+      operationId: createUser
+      description: Solo admin. La contraseña temporal se muestra una sola vez en la respuesta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Usuario creado y contraseña temporal generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedUserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /usuarios/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario
+      operationId: getUser
+      description: Solo admin.
+      responses:
+        '200':
+          description: Usuario
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      tags: [Usuarios]
+      summary: Actualizar usuario
+      operationId: updateUser
+      description: Solo admin. No permite cambiar el rol de una cuenta vinculada a perfil cliente o técnico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Usuarios]
+      summary: Desactivar usuario
+      operationId: deactivateUser
+      description: Solo admin. Es una baja lógica; no se elimina físicamente.
+      responses:
+        '204':
+          description: Usuario desactivado
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /usuarios/{id}/restablecer-password:
+    post:
+      tags: [Usuarios]
+      summary: Generar contraseña temporal para un usuario
+      operationId: resetUserPassword
+      description: Solo admin. La contraseña temporal se muestra una sola vez.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Contraseña temporal generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemporaryPasswordResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /clientes:
+    get:
+      tags: [Clientes]
+      summary: Listar clientes
+      operationId: listClients
+      description: Admin y coordinador. Filtros admitidos `q` y `activo`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+      responses:
+        '200':
+          description: Página de clientes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Clientes]
+      summary: Crear cliente con usuario y sedes
+      operationId: createClient
+      description: Admin y coordinador. La respuesta incluye la contraseña temporal de un solo uso.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '201':
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedClientResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /clientes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Clientes]
+      summary: Obtener cliente
+      operationId: getClient
+      description: Admin y coordinador.
+      responses:
+        '200':
+          description: Cliente y sus sedes vigentes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      tags: [Clientes]
+      summary: Actualizar cliente y opcionalmente sus sedes
+      operationId: updateClient
+      description: Admin y coordinador. Las sedes omitidas se desactivan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientUpdateRequest'
+      responses:
+        '200':
+          description: Cliente actualizado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Clientes]
+      summary: Eliminar cliente si no tiene sedes
+      operationId: deleteClient
+      description: Admin y coordinador. Si tiene sedes relacionadas responde 409 EN_USO; de lo contrario elimina cliente y usuario asociado.
+      responses:
+        '204':
+          description: Cliente eliminado
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /clientes/{id}/sedes:
+    get:
+      tags: [Clientes]
+      summary: Listar sedes vigentes de un cliente
+      operationId: listClientSites
+      description: Admin/coordinador pueden consultar cualquier cliente. El cliente solo puede consultar su propia organización.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Sedes activas, ordenadas por nombre
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Site'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /tecnicos:
+    get:
+      tags: [Técnicos]
+      summary: Listar técnicos
+      operationId: listTechnicians
+      description: Admin y coordinador. Filtros admitidos `q` y `activo`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+      responses:
+        '200':
+          description: Página de técnicos
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Technician'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Técnicos]
+      summary: Crear técnico con especialidades
+      operationId: createTechnician
+      description: Admin y coordinador. La respuesta incluye la contraseña temporal de un solo uso.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicianCreateRequest'
+      responses:
+        '201':
+          description: Técnico creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedTechnicianResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /tecnicos/carga:
+    get:
+      tags: [Técnicos]
+      summary: Consultar carga actual de técnicos
+      operationId: getTechnicianWorkload
+      description: Admin y coordinador. Incluye solicitudes activas ordenadas por fecha límite.
+      responses:
+        '200':
+          description: Carga por técnico
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TechnicianWorkload'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /tecnicos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Técnicos]
+      summary: Obtener técnico
+      operationId: getTechnician
+      description: Admin y coordinador.
+      responses:
+        '200':
+          description: Técnico
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Technician'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      tags: [Técnicos]
+      summary: Actualizar técnico
+      operationId: updateTechnician
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicianUpdateRequest'
+      responses:
+        '200':
+          description: Técnico actualizado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Technician'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Técnicos]
+      summary: Eliminar técnico si no tiene especialidades
+      operationId: deleteTechnician
+      description: Admin y coordinador. Si tiene especialidades relacionadas responde 409 EN_USO.
+      responses:
+        '204':
+          description: Técnico eliminado
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /especialidades:
+    get:
+      tags: [Catálogos]
+      summary: Listar especialidades
+      operationId: listSpecialties
+      description: Admin y coordinador.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+      responses:
+        '200':
+          description: Página de especialidades
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Specialty'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Catálogos]
+      summary: Crear especialidad
+      operationId: createSpecialty
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpecialtyCreateRequest'
+      responses:
+        '201':
+          description: Especialidad creada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Specialty'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /especialidades/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Catálogos]
+      summary: Obtener especialidad
+      operationId: getSpecialty
+      description: Admin y coordinador.
+      responses:
+        '200':
+          description: Especialidad
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Specialty'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      tags: [Catálogos]
+      summary: Actualizar especialidad
+      operationId: updateSpecialty
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpecialtyUpdateRequest'
+      responses:
+        '200':
+          description: Especialidad actualizada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Specialty'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Catálogos]
+      summary: Eliminar especialidad si no tiene relaciones
+      operationId: deleteSpecialty
+      description: Admin y coordinador. Si está relacionada con técnicos o categorías responde 409 EN_USO.
+      responses:
+        '204':
+          description: Especialidad eliminada
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /categorias:
+    get:
+      tags: [Catálogos]
+      summary: Listar categorías
+      operationId: listCategories
+      description: Lectura permitida a todos los roles autenticados; escritura solo admin y coordinador.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+      responses:
+        '200':
+          description: Página de categorías
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Catálogos]
+      summary: Crear categoría
+      operationId: createCategory
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /categorias/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Catálogos]
+      summary: Obtener categoría
+      operationId: getCategory
+      description: Lectura permitida a todos los roles autenticados.
+      responses:
+        '200':
+          description: Categoría con su especialidad
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      tags: [Catálogos]
+      summary: Actualizar categoría
+      operationId: updateCategory
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdateRequest'
+      responses:
+        '200':
+          description: Categoría actualizada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Catálogos]
+      summary: Eliminar categoría si no está en uso
+      operationId: deleteCategory
+      description: Admin y coordinador. Si tiene solicitudes relacionadas responde 409 EN_USO.
+      responses:
+        '204':
+          description: Categoría eliminada
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /prioridades:
+    get:
+      tags: [Catálogos]
+      summary: Listar prioridades
+      operationId: listPriorities
+      description: Lectura permitida a todos los roles autenticados; escritura solo admin y coordinador.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+      responses:
+        '200':
+          description: Página de prioridades
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Priority'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Catálogos]
+      summary: Crear prioridad
+      operationId: createPriority
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriorityCreateRequest'
+      responses:
+        '201':
+          description: Prioridad creada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Priority'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /prioridades/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Catálogos]
+      summary: Obtener prioridad
+      operationId: getPriority
+      description: Lectura permitida a todos los roles autenticados.
+      responses:
+        '200':
+          description: Prioridad
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Priority'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      tags: [Catálogos]
+      summary: Actualizar prioridad
+      operationId: updatePriority
+      description: Admin y coordinador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriorityUpdateRequest'
+      responses:
+        '200':
+          description: Prioridad actualizada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Priority'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Catálogos]
+      summary: Eliminar prioridad si no está en uso
+      operationId: deletePriority
+      description: Admin y coordinador. Si tiene solicitudes relacionadas responde 409 EN_USO.
+      responses:
+        '204':
+          description: Prioridad eliminada
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /solicitudes:
+    get:
+      tags: [Solicitudes]
+      summary: Listar solicitudes
+      operationId: listRequests
+      description: Técnicos ven las solicitudes asignadas a ellos; clientes, las de su organización. El filtro plazo se calcula según la regla SLA del servidor.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: estado
+          in: query
+          schema:
+            $ref: '#/components/schemas/RequestState'
+        - name: plazo
+          in: query
+          description: Estado del plazo calculado por el backend. Las solicitudes canceladas no tienen estado de plazo.
+          schema:
+            $ref: '#/components/schemas/DeadlineState'
+        - name: prioridad
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: categoria
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: cliente
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: tecnico
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: desde
+          in: query
+          description: Fecha inicial inclusiva, formato AAAA-MM-DD.
+          schema:
+            type: string
+            format: date
+        - name: hasta
+          in: query
+          description: Fecha final inclusiva, formato AAAA-MM-DD.
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          description: Página de solicitudes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiList'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Request'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Solicitudes]
+      summary: Registrar solicitud
+      operationId: createRequest
+      description: Coordinador y cliente. El coordinador debe indicar clienteId; el cliente utiliza su organización autenticada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestCreate'
+      responses:
+        '201':
+          description: Solicitud registrada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Request'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          description: Validación fallida o cliente/sede/categoría/prioridad inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /solicitudes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Solicitudes]
+      summary: Obtener detalle de solicitud
+      operationId: getRequest
+      responses:
+        '200':
+          description: Solicitud visible para el usuario autenticado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Request'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /solicitudes/{id}/estado:
+    patch:
+      tags: [Solicitudes]
+      summary: Cambiar estado de solicitud
+      operationId: changeRequestState
+      description: Los roles y cambios permitidos dependen de la transición. Un técnico solo puede modificar una solicitud asignada a él.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestStateChange'
+      responses:
+        '200':
+          description: Solicitud actualizada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Request'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Transición inválida o conflicto de versión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validación, comentario o resolución requerida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /solicitudes/{id}/asignaciones:
+    post:
+      tags: [Solicitudes]
+      summary: Asignar o reasignar técnico
+      operationId: assignTechnician
+      description: Solo coordinador. La reasignación requiere justificación.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentRequest'
+      responses:
+        '201':
+          description: Técnico asignado y solicitud actualizada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Request'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Estado no asignable o conflicto de versión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validación o reglas de asignación incumplidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /solicitudes/{id}/historial:
+    get:
+      tags: [Solicitudes]
+      summary: Consultar historial de estados
+      operationId: getRequestHistory
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Historial cronológico
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HistoryEvent'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /solicitudes/{id}/adjuntos:
+    get:
+      tags: [Solicitudes]
+      summary: Listar adjuntos de una solicitud
+      operationId: listRequestAttachments
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Adjuntos de la solicitud
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      tags: [Solicitudes]
+      summary: Subir adjunto sin multipart
+      operationId: uploadRequestAttachment
+      description: El cuerpo es el archivo binario, el tipo MIME va en Content-Type y nombre es obligatorio en query. Máximo 5 MB por archivo y 5 adjuntos por solicitud.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - name: nombre
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+          text/plain:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Adjunto guardado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: La solicitud está cerrada o cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          description: Tipo no permitido, archivo vacío o límite de adjuntos alcanzado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /solicitudes/{id}/adjuntos/{adjuntoId}:
+    get:
+      tags: [Solicitudes]
+      summary: Descargar adjunto
+      operationId: downloadRequestAttachment
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - name: adjuntoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Archivo descargado como attachment
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /notificaciones:
+    get:
+      tags: [Notificaciones]
+      summary: Listar notificaciones del usuario autenticado
+      operationId: listNotifications
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: leida
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Página de notificaciones y cantidad sin leer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /notificaciones/stream:
+    get:
+      tags: [Notificaciones]
+      summary: Escuchar nuevas notificaciones mediante SSE
+      operationId: streamNotifications
+      description: Mantiene una conexión abierta; emite eventos `notificacion` y comentarios periódicos `latido`. Requiere Authorization Bearer.
+      responses:
+        '200':
+          description: Flujo Server-Sent Events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /notificaciones/leidas:
+    patch:
+      tags: [Notificaciones]
+      summary: Marcar todas las notificaciones como leídas
+      operationId: markAllNotificationsRead
+      responses:
+        '200':
+          description: Notificaciones actualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatedCountResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /notificaciones/{id}/leida:
+    patch:
+      tags: [Notificaciones]
+      summary: Marcar como leída una notificación propia
+      operationId: markNotificationRead
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '204':
+          description: Notificación marcada como leída
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /dashboard/indicadores:
+    get:
+      tags: [Dashboard]
+      summary: Obtener indicadores del servicio
+      operationId: getDashboardIndicators
+      description: Solo admin y coordinador. El periodo se filtra por fecha de creación; la carga por técnico es actual.
+      parameters:
+        - name: desde
+          in: query
+          description: Fecha inicial inclusiva, formato AAAA-MM-DD.
+          schema:
+            type: string
+            format: date
+        - name: hasta
+          in: query
+          description: Fecha final inclusiva, formato AAAA-MM-DD.
+          schema:
+            type: string
+            format: date
+        - name: tecnico
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: categoria
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: cliente
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Indicadores y evolución
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DashboardIndicators'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Token JWT enviado en la cabecera Authorization.
+      description: Token JWT en la cabecera Authorization. No se usa query string para enviar el token.
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      description: Máximo 100. Valor predeterminado 10.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    Search:
+      name: q
+      in: query
+      schema:
+        type: string
+        maxLength: 160
+    Active:
+      name: activo
+      in: query
+      schema:
+        type: boolean
+  responses:
+    UnauthorizedError:
+      description: Token ausente, inválido o expirado; o cuenta inactiva
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ForbiddenError:
+      description: Rol sin permiso o contraseña temporal requiere primer cambio
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Recurso inexistente o no visible para el usuario
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ConflictError:
+      description: Conflicto de negocio, recurso duplicado, en uso o en estado incompatible
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Entrada inválida o rechazada por una regla de negocio
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    PayloadTooLarge:
+      description: El contenido supera el máximo permitido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimitError:
+      description: Se excedió el límite de intentos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Error inesperado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
   schemas:
     ErrorResponse:
       type: object
-      required:
-        - error
+      required: [error]
       properties:
         error:
           type: object
-          required:
-            - code
-            - message
+          required: [code, message]
           properties:
             code:
               type: string
@@ -58,58 +1760,966 @@ components:
             details:
               type: array
               items:
-                type: object
-                required:
-                  - campo
-                  - mensaje
-                properties:
-                  campo:
-                    type: string
-                    example: descripcion
-                  mensaje:
-                    type: string
-                    example: Es obligatoria
+                $ref: '#/components/schemas/ValidationDetail'
+    ValidationDetail:
+      type: object
+      required: [campo, mensaje]
+      properties:
+        campo:
+          type: string
+          example: descripcion
+        mensaje:
+          type: string
+          example: Es obligatoria
     ApiList:
       type: object
-      required:
-        - data
-        - meta
+      required: [data, meta]
       properties:
         data:
           type: array
           items: {}
         meta:
-          type: object
-          required:
-            - page
-            - limit
-            - total
-          properties:
-            page:
-              type: integer
-              minimum: 1
-            limit:
-              type: integer
-              minimum: 1
-              maximum: 100
-            total:
-              type: integer
-              minimum: 0
+          $ref: '#/components/schemas/PaginationMeta'
+    PaginationMeta:
+      type: object
+      required: [page, limit, total]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+    DataResponse:
+      type: object
+      required: [data]
+      properties:
+        data: {}
     HealthResponse:
       type: object
-      required:
-        - data
+      required: [data]
       properties:
         data:
           type: object
-          required:
-            - status
-            - db
+          required: [status, db]
           properties:
             status:
               type: string
-              enum:
-                - ok
-                - sin_base_de_datos
+              enum: [ok, sin_base_de_datos]
             db:
               type: boolean
+    UserRole:
+      type: string
+      enum: [admin, coordinador, tecnico, cliente]
+    AuthUser:
+      type: object
+      required: [id, nombre, email, telefono, activo, rol, debeCambiarPassword, clienteId]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        rol:
+          $ref: '#/components/schemas/UserRole'
+        debeCambiarPassword:
+          type: boolean
+        clienteId:
+          type: integer
+          nullable: true
+    AuthUserResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AuthUser'
+    AuthSession:
+      type: object
+      required: [token, usuario]
+      properties:
+        token:
+          type: string
+          description: JWT con expiración configurable (8 h por defecto).
+        usuario:
+          $ref: '#/components/schemas/AuthUser'
+    AuthSessionResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AuthSession'
+    SetupStatusResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [setupRequired]
+              properties:
+                setupRequired:
+                  type: boolean
+    MessageResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        password:
+          type: string
+          minLength: 1
+          maxLength: 72
+    InitialSetupRequest:
+      type: object
+      required: [nombre, email, password]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        password:
+          $ref: '#/components/schemas/Password'
+    Password:
+      type: string
+      minLength: 8
+      maxLength: 72
+      description: Debe incluir al menos una letra y un número.
+    ProfileUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+        currentPassword:
+          type: string
+          minLength: 1
+          maxLength: 72
+        newPassword:
+          $ref: '#/components/schemas/Password'
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 160
+    ResetPasswordRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        newPassword:
+          $ref: '#/components/schemas/Password'
+    User:
+      type: object
+      required: [id, nombre, email, telefono, activo, debeCambiarPassword, createdAt, rol, perfil]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        debeCambiarPassword:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        rol:
+          $ref: '#/components/schemas/UserRole'
+        perfil:
+          type: string
+          nullable: true
+          enum: [cliente, tecnico]
+    UserCreateRequest:
+      type: object
+      required: [nombre, email, rol]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        rol:
+          type: string
+          enum: [admin, coordinador]
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+    UserUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        rol:
+          $ref: '#/components/schemas/UserRole'
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+        activo:
+          type: boolean
+    CreatedUserResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [usuario, passwordTemporal]
+              properties:
+                usuario:
+                  $ref: '#/components/schemas/User'
+                passwordTemporal:
+                  type: string
+    TemporaryPasswordResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [passwordTemporal]
+              properties:
+                passwordTemporal:
+                  type: string
+    Site:
+      type: object
+      required: [id, nombre, direccion]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        direccion:
+          type: string
+    SiteInput:
+      type: object
+      required: [nombre, direccion]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        direccion:
+          type: string
+          minLength: 1
+          maxLength: 200
+    ClientUser:
+      type: object
+      required: [id, nombre, email, telefono, activo, rol]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        rol:
+          $ref: '#/components/schemas/UserRole'
+    Client:
+      type: object
+      required: [id, usuarioId, razonSocial, ruc, activo, usuario, sedes]
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        razonSocial:
+          type: string
+        ruc:
+          type: string
+          pattern: '^\d{13}$'
+        activo:
+          type: boolean
+        usuario:
+          $ref: '#/components/schemas/ClientUser'
+        sedes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Site'
+    ClientCreateRequest:
+      type: object
+      required: [nombre, email, razonSocial, ruc, sedes]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+        razonSocial:
+          type: string
+          minLength: 1
+          maxLength: 160
+        ruc:
+          type: string
+          pattern: '^\d{13}$'
+        sedes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SiteInput'
+    ClientUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+        razonSocial:
+          type: string
+          minLength: 1
+          maxLength: 160
+        ruc:
+          type: string
+          pattern: '^\d{13}$'
+        activo:
+          type: boolean
+        sedes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SiteInput'
+    CreatedClientResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: '#/components/schemas/Client'
+                - type: object
+                  required: [passwordTemporal]
+                  properties:
+                    passwordTemporal:
+                      type: string
+    TechnicianUser:
+      type: object
+      required: [id, nombre, email, telefono, activo, rol]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        rol:
+          $ref: '#/components/schemas/UserRole'
+    Specialty:
+      type: object
+      required: [id, nombre, activo]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        activo:
+          type: boolean
+    TechnicianSpecialty:
+      type: object
+      required: [tecnicoId, especialidadId, especialidad]
+      properties:
+        tecnicoId:
+          type: integer
+        especialidadId:
+          type: integer
+        especialidad:
+          $ref: '#/components/schemas/Specialty'
+    Technician:
+      type: object
+      required: [id, usuarioId, disponible, cargaMax, usuario, especialidades]
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        disponible:
+          type: boolean
+        cargaMax:
+          type: integer
+        usuario:
+          $ref: '#/components/schemas/TechnicianUser'
+        especialidades:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicianSpecialty'
+    TechnicianCreateRequest:
+      type: object
+      required: [nombre, email, especialidadIds]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+        disponible:
+          type: boolean
+          default: true
+        cargaMax:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 5
+        especialidadIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: integer
+            minimum: 1
+    TechnicianUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 160
+        telefono:
+          type: string
+          maxLength: 20
+          nullable: true
+        disponible:
+          type: boolean
+        cargaMax:
+          type: integer
+          minimum: 1
+          maximum: 20
+        especialidadIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: integer
+            minimum: 1
+        activo:
+          type: boolean
+    CreatedTechnicianResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: '#/components/schemas/Technician'
+                - type: object
+                  required: [passwordTemporal]
+                  properties:
+                    passwordTemporal:
+                      type: string
+    TechnicianWorkload:
+      type: object
+      required: [id, nombre, disponible, cargaMax, especialidades, activas]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        disponible:
+          type: boolean
+        cargaMax:
+          type: integer
+        especialidades:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedId'
+        activas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveRequest'
+    NamedId:
+      type: object
+      required: [id, nombre]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+    ActiveRequest:
+      type: object
+      required: [id, codigo, estado, fechaLimite]
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        estado:
+          $ref: '#/components/schemas/RequestState'
+        fechaLimite:
+          type: string
+          format: date-time
+    Category:
+      type: object
+      required: [id, nombre, especialidadId, activo, especialidad]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        especialidadId:
+          type: integer
+        activo:
+          type: boolean
+        especialidad:
+          $ref: '#/components/schemas/Specialty'
+    Priority:
+      type: object
+      required: [id, nombre, horasSla, activo]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        horasSla:
+          type: integer
+          minimum: 1
+        activo:
+          type: boolean
+    SpecialtyCreateRequest:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        activo:
+          type: boolean
+    SpecialtyUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        activo:
+          type: boolean
+    CategoryCreateRequest:
+      type: object
+      required: [nombre, especialidadId]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        especialidadId:
+          type: integer
+          minimum: 1
+        activo:
+          type: boolean
+    CategoryUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        especialidadId:
+          type: integer
+          minimum: 1
+        activo:
+          type: boolean
+    PriorityCreateRequest:
+      type: object
+      required: [nombre, horasSla]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 20
+        horasSla:
+          type: integer
+          minimum: 1
+        activo:
+          type: boolean
+    PriorityUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 20
+        horasSla:
+          type: integer
+          minimum: 1
+        activo:
+          type: boolean
+    RequestState:
+      type: string
+      enum: [registrada, aprobada, asignada, en_proceso, pendiente_info, resuelta, cerrada, cancelada]
+    DeadlineState:
+      type: string
+      enum: [a_tiempo, por_vencer, vencida, cumplida, incumplida]
+    Request:
+      type: object
+      required: [id, codigo, estado, prioridad, prioridadId, categoria, cliente, sede, tecnico, equipo, descripcion, resolucion, fechaLimite, estadoPlazo, createdAt, resolvedAt, closedAt, version]
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        estado:
+          $ref: '#/components/schemas/RequestState'
+        prioridad:
+          type: string
+        prioridadId:
+          type: integer
+        categoria:
+          $ref: '#/components/schemas/NamedId'
+        cliente:
+          type: object
+          required: [id, razonSocial]
+          properties:
+            id:
+              type: integer
+            razonSocial:
+              type: string
+        sede:
+          $ref: '#/components/schemas/NamedId'
+        tecnico:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/NamedId'
+        equipo:
+          type: string
+        descripcion:
+          type: string
+        resolucion:
+          type: string
+          nullable: true
+        fechaLimite:
+          type: string
+          format: date-time
+        estadoPlazo:
+          allOf:
+            - $ref: '#/components/schemas/DeadlineState'
+          nullable: true
+          description: null para solicitudes canceladas.
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        version:
+          type: integer
+    RequestCreate:
+      type: object
+      required: [sedeId, categoriaId, prioridadId, equipo, descripcion]
+      properties:
+        clienteId:
+          type: integer
+          minimum: 1
+          description: Obligatorio para coordinador; ignorado para cliente, que usa su propia organización.
+        sedeId:
+          type: integer
+          minimum: 1
+        categoriaId:
+          type: integer
+          minimum: 1
+        prioridadId:
+          type: integer
+          minimum: 1
+        equipo:
+          type: string
+          minLength: 1
+          maxLength: 160
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 4000
+    RequestStateChange:
+      type: object
+      required: [estado, version]
+      properties:
+        estado:
+          $ref: '#/components/schemas/RequestState'
+        comentario:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        resolucion:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        version:
+          type: integer
+          minimum: 1
+    AssignmentRequest:
+      type: object
+      required: [tecnicoId]
+      properties:
+        tecnicoId:
+          type: integer
+          minimum: 1
+        justificacion:
+          type: string
+          maxLength: 1000
+          nullable: true
+    HistoryEvent:
+      type: object
+      required: [id, estadoAnterior, estadoNuevo, usuario, comentario, fecha]
+      properties:
+        id:
+          type: integer
+        estadoAnterior:
+          allOf:
+            - $ref: '#/components/schemas/RequestState'
+          nullable: true
+        estadoNuevo:
+          $ref: '#/components/schemas/RequestState'
+        usuario:
+          type: string
+        comentario:
+          type: string
+          nullable: true
+        fecha:
+          type: string
+          format: date-time
+    Attachment:
+      type: object
+      required: [id, nombre, mime, tamano, subidoPor, createdAt]
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        mime:
+          type: string
+          enum: [application/pdf, image/png, image/jpeg, image/webp, text/plain]
+        tamano:
+          type: integer
+          minimum: 0
+        subidoPor:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    NotificationType:
+      type: string
+      enum: [registro, asignacion, cambio_estado, solicitud_info, cierre]
+    Notification:
+      type: object
+      required: [id, tipo, mensaje, leida, solicitudId, createdAt]
+      properties:
+        id:
+          type: integer
+        tipo:
+          $ref: '#/components/schemas/NotificationType'
+        mensaje:
+          type: string
+        leida:
+          type: boolean
+        solicitudId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    NotificationListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/PaginationMeta'
+            - type: object
+              required: [noLeidas]
+              properties:
+                noLeidas:
+                  type: integer
+                  minimum: 0
+    UpdatedCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [actualizadas]
+              properties:
+                actualizadas:
+                  type: integer
+                  minimum: 0
+    DashboardIndicators:
+      type: object
+      required: [total, abiertas, vencidas, porVencer, cumplimientoPlazo, tiempoPromedioResolucionHoras, porEstado, porPrioridad, cargaPorTecnico, evolucion, proximasAVencer]
+      properties:
+        total:
+          type: integer
+        abiertas:
+          type: integer
+        vencidas:
+          type: integer
+        porVencer:
+          type: integer
+        cumplimientoPlazo:
+          type: number
+          nullable: true
+        tiempoPromedioResolucionHoras:
+          type: number
+          nullable: true
+        porEstado:
+          type: array
+          items:
+            type: object
+            required: [estado, cantidad]
+            properties:
+              estado:
+                $ref: '#/components/schemas/RequestState'
+              cantidad:
+                type: integer
+        porPrioridad:
+          type: array
+          items:
+            type: object
+            required: [prioridad, cantidad]
+            properties:
+              prioridad:
+                type: string
+              cantidad:
+                type: integer
+        cargaPorTecnico:
+          type: array
+          items:
+            type: object
+            required: [tecnicoId, tecnico, activas, cargaMax, disponible]
+            properties:
+              tecnicoId:
+                type: integer
+              tecnico:
+                type: string
+              activas:
+                type: integer
+              cargaMax:
+                type: integer
+              disponible:
+                type: boolean
+        evolucion:
+          type: array
+          items:
+            type: object
+            required: [fecha, creadas, resueltas]
+            properties:
+              fecha:
+                type: string
+                format: date
+              creadas:
+                type: integer
+              resueltas:
+                type: integer
+        proximasAVencer:
+          type: array
+          items:
+            type: object
+            required: [id, codigo, fechaLimite]
+            properties:
+              id:
+                type: integer
+              codigo:
+                type: string
+              fechaLimite:
+                type: string
+                format: date-time
