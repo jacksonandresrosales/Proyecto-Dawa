@@ -1,11 +1,11 @@
 # Contratos de la API REST
 
-Base: `/api`. Formato JSON. Este documento es la base del archivo `backend/openapi.yaml`, que se publicará en `/api/docs` (Swagger UI) en la semana 2.
+Base: `/api`. Formato JSON. El contrato OpenAPI está disponible en `GET /api/openapi.yaml` y Swagger UI en `/api/docs` (redirige a `/api/docs/`).
 
 ## Convenciones
 
-- **Autenticación**: cabecera `Authorization: Bearer <token>` en todo salvo `setup-status`, `setup`, `login`, `forgot` y `reset`.
-- **Listas**: `?page=1&limit=10` (máximo 100), más filtros y `?sort=campo` o `?sort=-campo`.
+- **Autenticación**: cabecera `Authorization: Bearer <token>` en las rutas protegidas. Son públicas `GET /health`, `GET /openapi.yaml`, `GET /docs/` y las rutas `setup-status`, `setup`, `login`, `forgot` y `reset` de autenticación.
+- **Listas**: `?page=1&limit=10` (máximo 100), más los filtros documentados para cada recurso. La API no admite actualmente el parámetro `sort`.
 
 ```json
 { "data": [ ... ], "meta": { "page": 1, "limit": 10, "total": 42 } }
@@ -56,7 +56,7 @@ Con `debeCambiarPassword: true`, solo se permiten `GET/PATCH /auth/me` y `POST /
 ### Solicitudes
 | Método | Ruta | Roles | Descripción | Estado |
 |---|---|---|---|---|
-| GET | `/solicitudes` | A C T L | Lista paginada, de la más reciente a la más antigua; filtros `estado`, `prioridad`, `categoria`, `cliente`, `tecnico`, `desde`, `hasta` (AAAA-MM-DD) y `q` (código, equipo o descripción). T ve las suyas, L las de su organización | Hecho |
+| GET | `/solicitudes` | A C T L | Lista paginada, de la más reciente a la más antigua; filtros `estado`, `plazo` (`a_tiempo`, `por_vencer`, `vencida`, `cumplida`, `incumplida`), `prioridad`, `categoria`, `cliente`, `tecnico`, `desde`, `hasta` (AAAA-MM-DD) y `q` (código, equipo o descripción). T ve las suyas, L las de su organización | Hecho |
 | POST | `/solicitudes` | C L | Registra; C envía `clienteId` | Hecho |
 | GET | `/solicitudes/:id` | A C T L | Detalle | Hecho |
 | PATCH | `/solicitudes/:id/estado` | A C T L | Cambia estado según la tabla de transiciones | Hecho |
@@ -66,7 +66,7 @@ Con `debeCambiarPassword: true`, solo se permiten `GET/PATCH /auth/me` y `POST /
 | POST | `/solicitudes/:id/adjuntos?nombre=` | C L | Sube un archivo | Hecho |
 | GET | `/solicitudes/:id/adjuntos/:adjuntoId` | A C T L | Descarga | Hecho |
 
-Pendiente: el filtro `plazo` y el orden `?sort` en la lista. `tecnicos-sugeridos` se reemplazó por `GET /tecnicos/carga`: el modal de asignar marca qué técnicos cumplen especialidad, disponibilidad y cupo con esos datos, y la API vuelve a validarlo al confirmar.
+El filtro `plazo` utiliza el estado calculado por las reglas SLA. Las solicitudes canceladas tienen `estadoPlazo: null`; `cancelada` no es un valor válido del filtro y produce `422 VALIDACION`. `tecnicos-sugeridos` se reemplazó por `GET /tecnicos/carga`: el modal de asignar marca qué técnicos cumplen especialidad, disponibilidad y cupo con esos datos, y la API vuelve a validarlo al confirmar.
 
 **Adjuntos.** El cuerpo de `POST` es el archivo tal cual, sin multipart (sin dependencias extra): su tipo va en `Content-Type` y su nombre en `?nombre=`. Se aceptan PDF, PNG, JPG, WEBP y TXT, de hasta 5 MB y como máximo 5 por solicitud. No se adjunta a solicitudes cerradas ni canceladas. Se guardan en `backend/uploads/` con un nombre aleatorio (el nombre original es solo un dato y nunca forma la ruta). La descarga responde con `Content-Disposition: attachment`, nunca se muestra dentro de la app. Errores: 422 `TIPO_NO_PERMITIDO`, `ARCHIVO_VACIO`, `LIMITE_ADJUNTOS`; 413 `ARCHIVO_DEMASIADO_GRANDE`; 409 `ESTADO_NO_PERMITE_ADJUNTOS`.
 
@@ -155,17 +155,18 @@ Los indicadores se calculan en el backend con las mismas reglas de plazo que la 
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/health` | Estado del servicio |
-| GET | `/docs` | Swagger UI |
+| GET | `/docs/` | Interfaz interactiva Swagger UI; `/api/docs` redirige aquí |
+| GET | `/openapi.yaml` | Contrato OpenAPI en YAML |
 
 ## Ejemplos
 
 ### POST /api/auth/login
 ```json
-{ "email": "coordinador@servigest.ec", "password": "********" }
+{ "email": "admin@servigest.test", "password": "********" }
 ```
 200:
 ```json
-{ "data": { "token": "eyJ...", "usuario": { "id": 2, "nombre": "María Coordinadora", "email": "coordinador@servigest.ec", "rol": "coordinador", "debeCambiarPassword": false } } }
+{ "data": { "token": "eyJ...", "usuario": { "id": 1, "nombre": "Administración Demo", "email": "admin@servigest.test", "rol": "admin", "debeCambiarPassword": false } } }
 ```
 401: `{ "error": { "code": "CREDENCIALES_INVALIDAS", "message": "Correo o contraseña incorrectos" } }`
 

@@ -27,7 +27,7 @@ function expectReferencesToResolve(document) {
 
 describe('OpenAPI docs', () => {
   it('serves Swagger UI configured with the project document', async () => {
-    const docs = await request(app).get('/api/docs/');
+    const docs = await request(app).get('/api/docs').redirects(1);
     const initializer = await request(app).get('/api/docs/swagger-ui-init.js');
 
     expect(docs.status).toBe(200);
@@ -54,6 +54,7 @@ describe('OpenAPI docs', () => {
     });
     expect(document.components.schemas).toHaveProperty('ErrorResponse');
     expect(document.components.schemas).toHaveProperty('ApiList');
+    expect(document.components.schemas.LoginRequest.properties.email.example).toBe('admin@servigest.test');
     expect(document.components.schemas.DeadlineState.enum).toEqual([
       'a_tiempo',
       'por_vencer',
