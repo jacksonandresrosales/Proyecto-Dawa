@@ -1891,6 +1891,7 @@ components:
           type: string
           format: email
           maxLength: 160
+          example: admin@servigest.test
         password:
           type: string
           minLength: 1

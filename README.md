@@ -64,6 +64,8 @@ npm run dev:frontend
 ```
 
 - API: http://localhost:3000/api/health
+- Swagger UI: http://localhost:3000/api/docs
+- Contrato OpenAPI (YAML): http://localhost:3000/api/openapi.yaml
 - Aplicación: http://localhost:5173
 - Inicio de sesión: http://localhost:5173/login
 - Configuración inicial: http://localhost:5173/configurar
