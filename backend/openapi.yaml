@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: ServiGest API
+  version: 1.0.0
+  description: |
+    API REST de ServiGest. Las rutas de la API usan el prefijo `/api`.
+servers:
+  - url: /api
+    description: Servidor actual
+tags:
+  - name: Sistema
+    description: Estado del servicio
+paths:
+  /health:
+    get:
+      tags:
+        - Sistema
+      summary: Comprobar el estado del servicio y la base de datos
+      operationId: getHealth
+      responses:
+        '200':
+          description: Servicio y base de datos disponibles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Servicio disponible, pero sin conexión a la base de datos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT enviado en la cabecera Authorization.
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: VALIDACION
+            message:
+              type: string
+              example: Datos inválidos
+            details:
+              type: array
+              items:
+                type: object
+                required:
+                  - campo
+                  - mensaje
+                properties:
+                  campo:
+                    type: string
+                    example: descripcion
+                  mensaje:
+                    type: string
+                    example: Es obligatoria
+    ApiList:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items: {}
+        meta:
+          type: object
+          required:
+            - page
+            - limit
+            - total
+          properties:
+            page:
+              type: integer
+              minimum: 1
+            limit:
+              type: integer
+              minimum: 1
+              maximum: 100
+            total:
+              type: integer
+              minimum: 0
+    HealthResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - status
+            - db
+          properties:
+            status:
+              type: string
+              enum:
+                - ok
+                - sin_base_de_datos
+            db:
+              type: boolean
