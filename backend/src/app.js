@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
+import helmet, { contentSecurityPolicy } from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { parse } from 'yaml';
 import { prisma } from './repositories/prisma.js';
 import { AppError } from './utils/AppError.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -12,6 +16,9 @@ import { usuariosRouter } from './routes/usuariosRoutes.js';
 import { solicitudesRouter } from './routes/solicitudesRoutes.js';
 import { notificacionesRouter } from './routes/notificacionesRoutes.js';
 import { dashboardRouter } from './routes/dashboardRoutes.js';
+
+const openApiPath = fileURLToPath(new URL('../openapi.yaml', import.meta.url));
+const openApiDocument = parse(readFileSync(openApiPath, 'utf8'));
 
 // La app se exporta sin escuchar un puerto para poder probarla con Supertest.
 export const app = express();
@@ -29,6 +36,16 @@ app.get('/api/health', async (req, res) => {
   }
   res.status(db ? 200 : 503).json({ data: { status: db ? 'ok' : 'sin_base_de_datos', db } });
 });
+
+app.get('/api/openapi.yaml', (req, res) => res.sendFile(openApiPath));
+app.use(
+  '/api/docs',
+  contentSecurityPolicy({
+    directives: { scriptSrc: ["'self'", "'unsafe-inline'"] },
+  }),
+  swaggerUi.serve,
+  swaggerUi.setup(openApiDocument),
+);
 
 app.use('/api/auth', authRouter);
 app.use('/api/usuarios', usuariosRouter);
