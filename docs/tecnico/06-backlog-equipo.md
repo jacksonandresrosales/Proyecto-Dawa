@@ -49,7 +49,7 @@ Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (i
 | Diseño responsivo | Hecho | Revisadas a 375 px todas las pantallas, sin desborde horizontal: menú en una fila deslizable, solicitudes como tarjetas y panel de notificaciones a lo ancho |
 | Sesión vencida | Hecho | Un 401 cierra la sesión y lleva al login con aviso (pantallas E08 y E11 del diseño) |
 | T-24 Despliegue | Hecho | Frontend en Cloudflare Pages, API en Railway y PostgreSQL en Neon; aplicación y health check de la API verificados con respuesta 200 |
-| T-25 Manuales, informe de pruebas y video | Pendiente | Faltan consolidar los manuales, el informe final de pruebas y el video |
+| T-25 Manuales, informe de pruebas y video | Hecho | [Manual de usuario](../manuales/manual-usuario.md) y [PDF](../manuales/Manual_Usuario_ServiGest.pdf), [manual técnico](../manuales/manual-tecnico.md) y [PDF](../manuales/Manual_Tecnico_ServiGest.pdf), [informe final de pruebas](../informe-pruebas.md) y [PDF](../Informe_Final_Pruebas_ServiGest_T25.pdf); video de demostración terminado |
 
 ## Backlog inicial
 

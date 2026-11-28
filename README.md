@@ -99,13 +99,17 @@ La aplicación y el health check de la API responden correctamente. Las variable
 backend/     API Express: routes → controllers → services → repositories → Prisma
 frontend/    React + TypeScript: pages, components (ui = shadcn), hooks, api
 docs/ux/       Roles, sitemap, flujos, wireframes, componentes
-docs/tecnico/  Arquitectura, modelo de datos, reglas, API, seguridad, backlog
+docs/tecnico/  Arquitectura, modelo de datos, reglas, API, seguridad y backlog
+docs/manuales/ Manuales de usuario y técnico
 ```
 
 ## Documentación
 
+- Manual de usuario: [Markdown](docs/manuales/manual-usuario.md) · [PDF](docs/manuales/Manual_Usuario_ServiGest.pdf)
 - Diseño UX: [docs/ux/README.md](docs/ux/README.md)
 - Documento técnico: [docs/tecnico/README.md](docs/tecnico/README.md)
+- Manual técnico de operación y despliegue: [Markdown](docs/manuales/manual-tecnico.md) · [PDF](docs/manuales/Manual_Tecnico_ServiGest.pdf)
+- Informe final de pruebas: [Markdown](docs/informe-pruebas.md) · [PDF](docs/Informe_Final_Pruebas_ServiGest_T25.pdf)
 
 ## Equipo
 
