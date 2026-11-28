@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthContext';
 import Campana from '@/components/Campana';
 
 const linkStyle = ({ isActive }: { isActive: boolean }) =>
-  `rounded-full px-3 py-2 text-sm font-medium ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent'}`;
+  `tab-transition-indicator rounded-full px-3 py-2 text-sm font-medium ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent'}`;
 
 export default function AppShell() {
   const { user, logout } = useAuth();
@@ -45,7 +45,7 @@ export default function AppShell() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8"><Outlet /></main>
+      <main className="page-transition-content mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8"><Outlet /></main>
     </div>
   );
 }

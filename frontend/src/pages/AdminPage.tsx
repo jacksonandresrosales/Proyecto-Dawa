@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ApiRequestError, apiRequest, type ApiList } from '@/api/admin';
@@ -35,6 +35,7 @@ type PanelFormProps<T> = {
 };
 type ResourcePanelProps<T extends { id: number }> = {
   token: string;
+  isActive: boolean;
   endpoint: string;
   title: string;
   description: string;
@@ -46,6 +47,7 @@ type ResourcePanelProps<T extends { id: number }> = {
 
 type MainSection = 'clientes' | 'tecnicos' | 'catalogos';
 type CatalogSection = 'especialidades' | 'categorias' | 'prioridades';
+type SedeFormValue = { rowId: number; nombre: string; direccion: string };
 
 const fieldClass =
   'mt-1 h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring';
@@ -66,6 +68,7 @@ function Status({ active }: { active: boolean }) {
 
 function ResourcePanel<T extends { id: number }>({
   token,
+  isActive,
   endpoint,
   title,
   description,
@@ -104,13 +107,13 @@ function ResourcePanel<T extends { id: number }>({
   }, [activeFilter, endpoint, page, query]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !isActive) return;
     let active = true;
     queueMicrotask(() => {
       if (active) void load();
     });
     return () => { active = false; };
-  }, [load, token]);
+  }, [isActive, load, token]);
 
   async function save(values: object) {
     setSaving(true);
@@ -258,7 +261,11 @@ function ResourcePanel<T extends { id: number }>({
 }
 
 function ClienteForm({ editing, onSave, onCancel }: PanelFormProps<Cliente>) {
-  const [sedes, setSedes] = useState(() => editing?.sedes.map(({ nombre, direccion }) => ({ nombre, direccion })) ?? [{ nombre: '', direccion: '' }]);
+  const nextSedeRowId = useRef(0);
+  const createSedeRow = () => ({ rowId: nextSedeRowId.current++, nombre: '', direccion: '' });
+  const [sedes, setSedes] = useState<SedeFormValue[]>(() =>
+    editing?.sedes.map(({ nombre, direccion }) => ({ ...createSedeRow(), nombre, direccion })) ?? [createSedeRow()],
+  );
   const [formError, setFormError] = useState('');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -275,7 +282,7 @@ function ClienteForm({ editing, onSave, onCancel }: PanelFormProps<Cliente>) {
       telefono: form.get('telefono') || null,
       razonSocial: form.get('razonSocial'),
       ruc: form.get('ruc'),
-      sedes,
+      sedes: sedes.map(({ nombre, direccion }) => ({ nombre, direccion })),
     };
     try { await onSave(values); } catch { /* The resource panel displays the API error. */ }
   }
@@ -291,13 +298,13 @@ function ClienteForm({ editing, onSave, onCancel }: PanelFormProps<Cliente>) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className={labelClass}>Sedes</span>
-          <Button type="button" variant="outline" size="sm" onClick={() => setSedes((current) => [...current, { nombre: '', direccion: '' }])}>Agregar sede</Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setSedes((current) => [...current, createSedeRow()])}>Agregar sede</Button>
         </div>
         {sedes.map((sede, index) => (
-          <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2" key={`${index}-${sede.nombre}`}>
-            <label className={labelClass}>Nombre<input className={fieldClass} required maxLength={120} value={sede.nombre} onChange={(event) => setSedes((current) => current.map((item, i) => i === index ? { ...item, nombre: event.target.value } : item))} /></label>
-            <label className={labelClass}>Dirección<input className={fieldClass} required maxLength={200} value={sede.direccion} onChange={(event) => setSedes((current) => current.map((item, i) => i === index ? { ...item, direccion: event.target.value } : item))} /></label>
-            {sedes.length > 1 && <Button className="sm:col-span-2 sm:justify-self-end" type="button" variant="ghost" size="sm" onClick={() => setSedes((current) => current.filter((_, i) => i !== index))}>Quitar sede</Button>}
+          <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2" key={sede.rowId}>
+            <label className={labelClass}>Nombre<input className={fieldClass} required maxLength={120} value={sede.nombre} onChange={(event) => setSedes((current) => current.map((item) => item.rowId === sede.rowId ? { ...item, nombre: event.target.value } : item))} /></label>
+            <label className={labelClass}>Dirección<input className={fieldClass} required maxLength={200} value={sede.direccion} onChange={(event) => setSedes((current) => current.map((item) => item.rowId === sede.rowId ? { ...item, direccion: event.target.value } : item))} /></label>
+            {sedes.length > 1 && <Button className="sm:col-span-2 sm:justify-self-end" type="button" variant="ghost" size="sm" onClick={() => setSedes((current) => current.filter((item) => item.rowId !== sede.rowId))}>Quitar sede</Button>}
           </div>
         ))}
       </div>
@@ -488,43 +495,44 @@ export default function AdminPage() {
 
       <nav className="flex flex-wrap gap-2" aria-label="Secciones de administración">
         {([['clientes', 'Clientes'], ['tecnicos', 'Técnicos'], ['catalogos', 'Catálogos']] as const).map(([key, label]) => (
-          <Button key={key} type="button" variant={section === key ? 'default' : 'outline'} onClick={() => setSection(key)}>{label}</Button>
+          <Button key={key} type="button" className="tab-transition-indicator" variant={section === key ? 'default' : 'outline'} onClick={() => setSection(key)}>{label}</Button>
         ))}
       </nav>
 
-      {section === 'clientes' && (
+      <div hidden={section !== 'clientes'} className={section === 'clientes' ? 'tab-panel-enter' : undefined}>
         <ResourcePanel<Cliente>
-          token={token} endpoint="/clientes" title="Clientes" description="Cuentas, RUC y sedes registradas."
+          token={token} isActive={section === 'clientes'} endpoint="/clientes" title="Clientes" description="Cuentas, RUC y sedes registradas."
           specialties={specialties} getActive={(item) => item.activo} renderTable={ClienteTable}
           renderForm={(props) => <ClienteForm key={props.editing?.id ?? 'new-client'} {...props} />}
         />
-      )}
-      {section === 'tecnicos' && (
+      </div>
+      <div hidden={section !== 'tecnicos'} className={section === 'tecnicos' ? 'tab-panel-enter' : undefined}>
         <ResourcePanel<Tecnico>
-          token={token} endpoint="/tecnicos" title="Técnicos" description="Especialidades, disponibilidad y carga máxima."
+          token={token} isActive={section === 'tecnicos'} endpoint="/tecnicos" title="Técnicos" description="Especialidades, disponibilidad y carga máxima."
           specialties={specialties} getActive={(item) => item.usuario.activo} renderTable={TecnicoTable}
           renderForm={(props) => <TecnicoForm key={props.editing?.id ?? 'new-tech'} {...props} />}
         />
-      )}
-      {section === 'catalogos' && (
-        <>
-          <nav className="flex flex-wrap gap-2" aria-label="Catálogos">
-            {([['especialidades', 'Especialidades'], ['categorias', 'Categorías'], ['prioridades', 'Parámetros SLA']] as const).map(([key, label]) => (
-              <Button key={key} type="button" size="sm" variant={catalogSection === key ? 'secondary' : 'ghost'} onClick={() => setCatalogSection(key)}>{label}</Button>
-            ))}
-          </nav>
-          <ResourcePanel<Catalogo>
-            token={token}
-            key={catalogSection}
-            endpoint={`/${catalogSection}`}
-            title={catalogSection === 'prioridades' ? 'Parámetros operativos' : catalogSection[0].toUpperCase() + catalogSection.slice(1)}
-            description={catalogSection === 'categorias' ? 'Cada categoría pertenece a una especialidad.' : catalogSection === 'prioridades' ? 'Prioridades y horas objetivo de servicio (SLA).' : 'Especialidades disponibles para asignación.'}
-            specialties={specialties} getActive={(item) => item.activo}
-            renderTable={(items, actions) => CatalogTable(items, actions, catalogSection)}
-            renderForm={(props) => <CatalogForm key={`${catalogSection}-${props.editing?.id ?? 'new'}`} {...props} kind={catalogSection} />}
-          />
-        </>
-      )}
+      </div>
+      <section hidden={section !== 'catalogos'} className={section === 'catalogos' ? 'tab-panel-enter space-y-5' : 'space-y-5'}>
+        <nav className="flex flex-wrap gap-2" aria-label="Catálogos">
+          {([['especialidades', 'Especialidades'], ['categorias', 'Categorías'], ['prioridades', 'Parámetros SLA']] as const).map(([key, label]) => (
+            <Button key={key} type="button" size="sm" className="tab-transition-indicator" variant={catalogSection === key ? 'secondary' : 'ghost'} onClick={() => setCatalogSection(key)}>{label}</Button>
+          ))}
+        </nav>
+        {(['especialidades', 'categorias', 'prioridades'] as const).map((catalog) => (
+          <div key={catalog} hidden={catalogSection !== catalog} className={catalogSection === catalog ? 'tab-panel-enter' : undefined}>
+            <ResourcePanel<Catalogo>
+              token={token} isActive={section === 'catalogos' && catalogSection === catalog}
+              endpoint={`/${catalog}`}
+              title={catalog === 'prioridades' ? 'Parámetros operativos' : catalog[0].toUpperCase() + catalog.slice(1)}
+              description={catalog === 'categorias' ? 'Cada categoría pertenece a una especialidad.' : catalog === 'prioridades' ? 'Prioridades y horas objetivo de servicio (SLA).' : 'Especialidades disponibles para asignación.'}
+              specialties={specialties} getActive={(item) => item.activo}
+              renderTable={(items, actions) => CatalogTable(items, actions, catalog)}
+              renderForm={(props) => <CatalogForm key={`${catalog}-${props.editing?.id ?? 'new'}`} {...props} kind={catalog} />}
+            />
+          </div>
+        ))}
+      </section>
     </main>
   );
 }
