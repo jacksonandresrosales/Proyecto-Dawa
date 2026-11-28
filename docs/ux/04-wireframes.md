@@ -31,10 +31,10 @@ Componentes: `AppShell`, `Sidebar`, `Topbar`, `NotificationBell`.
 
 Componentes: `FormField`.
 
-## 2. Recuperar / Restablecer — `/recuperar`, `/restablecer/:token`
+## 2. Recuperar / Restablecer — `/recuperar`, `/restablecer?token=...`
 
 - Recuperar: correo + Enviar; luego mensaje neutro.
-- Restablecer: nueva contraseña + confirmación; mensaje si el enlace no sirve.
+- Restablecer: recibe el token por query string; nueva contraseña + confirmación; mensaje si el enlace no sirve.
 
 ## 2b. Primer acceso — `/primer-acceso`
 

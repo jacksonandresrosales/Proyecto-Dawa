@@ -261,10 +261,12 @@ function ResourcePanel<T extends { id: number }>({
 }
 
 function ClienteForm({ editing, onSave, onCancel }: PanelFormProps<Cliente>) {
-  const nextSedeRowId = useRef(0);
+  const nextSedeRowId = useRef(editing?.sedes.length ?? 1);
   const createSedeRow = () => ({ rowId: nextSedeRowId.current++, nombre: '', direccion: '' });
   const [sedes, setSedes] = useState<SedeFormValue[]>(() =>
-    editing?.sedes.map(({ nombre, direccion }) => ({ ...createSedeRow(), nombre, direccion })) ?? [createSedeRow()],
+    editing?.sedes.map(({ nombre, direccion }, rowId) => ({ rowId, nombre, direccion })) ?? [
+      { rowId: 0, nombre: '', direccion: '' },
+    ],
   );
   const [formError, setFormError] = useState('');
 
@@ -300,7 +302,7 @@ function ClienteForm({ editing, onSave, onCancel }: PanelFormProps<Cliente>) {
           <span className={labelClass}>Sedes</span>
           <Button type="button" variant="outline" size="sm" onClick={() => setSedes((current) => [...current, createSedeRow()])}>Agregar sede</Button>
         </div>
-        {sedes.map((sede, index) => (
+        {sedes.map((sede) => (
           <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2" key={sede.rowId}>
             <label className={labelClass}>Nombre<input className={fieldClass} required maxLength={120} value={sede.nombre} onChange={(event) => setSedes((current) => current.map((item) => item.rowId === sede.rowId ? { ...item, nombre: event.target.value } : item))} /></label>
             <label className={labelClass}>Dirección<input className={fieldClass} required maxLength={200} value={sede.direccion} onChange={(event) => setSedes((current) => current.map((item) => item.rowId === sede.rowId ? { ...item, direccion: event.target.value } : item))} /></label>

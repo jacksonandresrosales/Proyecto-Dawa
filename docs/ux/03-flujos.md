@@ -16,7 +16,7 @@ flowchart TD
   P -- No --> I
   L -- Olvidé mi contraseña --> R[/recuperar: ingresa correo/]
   R --> M[Mensaje: si el correo existe, se generó un enlace]
-  M --> T[/restablecer/:token/]
+  M --> T[/restablecer?token=.../]
   T --> V{¿Token válido,<br/>sin usar y vigente?}
   V -- No --> X[Enlace inválido o vencido] --> R
   V -- Sí --> N[Nueva contraseña] --> L

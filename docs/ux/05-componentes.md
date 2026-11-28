@@ -1,6 +1,6 @@
-# Inventario de componentes
+# Inventario previsto de componentes
 
-Componentes funcionales de React con Hooks, en TypeScript (`.tsx`), armados sobre shadcn/ui (ver [Base: shadcn/ui](#base-shadcnui)). Carpeta prevista: `frontend/src/components/<grupo>/`.
+Propuesta de componentes funcionales de React con Hooks, en TypeScript (`.tsx`), armados sobre shadcn/ui (ver [Base: shadcn/ui](#base-shadcnui)). Es un inventario de diseño, no una lista exacta de archivos o dependencias instaladas. Carpeta prevista: `frontend/src/components/<grupo>/`.
 
 ## Layout
 
@@ -89,7 +89,7 @@ Los componentes de esta lista no se construyen desde cero: se arman con piezas d
 | `TechnicianLoadBar` | `progress` |
 | `RequestForm`, `FormField` | `field`, `input`, `select`, `textarea`, `button` |
 | `KpiCard` | `card` |
-| `ChartCard` | `card`, `chart` (Recharts) |
+| `ChartCard` | `card`, gráfico SVG propio (sin Recharts) |
 | `DateRangeFilter` | `popover`, `calendar` |
 | `ConfirmDialog` | `alert-dialog` |
 | `Toast` | `sonner` |
@@ -97,4 +97,4 @@ Los componentes de esta lista no se construyen desde cero: se arman con piezas d
 
 Sin pieza de shadcn (se escriben a mano): `ProtectedRoute`, `HistoryTimeline`, `AttachmentUploader` y los hooks.
 
-Instaladas hoy: `button` y `card`. El resto se agrega cuando se construya la pantalla que lo usa.
+La implementación actual no sigue necesariamente esta composición por componentes. El gráfico del dashboard está dibujado con SVG y el conjunto real de componentes y dependencias se consulta en `frontend/src/components/` y `frontend/package.json`.

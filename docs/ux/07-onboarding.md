@@ -42,7 +42,7 @@ Tarjeta al inicio de `/inicio`, encima del resumen del rol. Tres pasos como máx
 
 | Rol | Qué hace en la app | Paso 1 | Paso 2 | Paso 3 |
 |---|---|---|---|---|
-| Administrador | Configura el sistema y ve los indicadores | Revisar categorías y plazos por prioridad (`/admin/catalogos`) | Crear técnicos con sus especialidades (`/admin/tecnicos`) | Crear clientes, sedes y sus usuarios (`/admin/clientes`) |
+| Administrador | Configura el sistema y ve los indicadores | Revisar categorías y plazos por prioridad (pestaña Catálogos de `/admin`) | Crear técnicos con sus especialidades (pestaña Técnicos de `/admin`) | Crear clientes, sedes y sus usuarios (pestaña Clientes de `/admin`) |
 | Coordinador | Aprueba, asigna y vigila los plazos | Ver las solicitudes por aprobar (`/solicitudes?estado=registrada`) | Conocer la carga de los técnicos (`/tecnicos/carga`) | Asignar la primera solicitud (detalle → Asignar) |
 | Técnico | Atiende lo que le asignan | Completar el teléfono en el perfil (`/perfil`) | Abrir su primera solicitud asignada (`/solicitudes`) | Registrar avance o resolverla (detalle) |
 | Cliente | Registra y sigue sus solicitudes | Completar el teléfono en el perfil (`/perfil`) | Registrar la primera solicitud (`/solicitudes/nueva`) | Ver su estado e historial (detalle) |

@@ -25,7 +25,7 @@ Compartido: modelo de datos y datos semilla (todos, semana 1), OpenAPI (cada uno
 
 Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (integración y reglas).
 
-## Avance (25/11/2026)
+## Avance (27/11/2026)
 
 | Tarea | Estado | Notas |
 |---|---|---|
@@ -38,7 +38,7 @@ Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (i
 | T-11 Cálculo de plazos | Hecho | `services/sla.js` |
 | T-12 OpenAPI y Swagger UI | Hecho | `/api/openapi.yaml` y `/api/docs` operativos; contrato y `04-api.md` sincronizados, con pruebas |
 | T-21 Pruebas unitarias de reglas | Hecho | Reglas 1 a 6 y 8 |
-| T-22 Pruebas de integración y autorización por rol | En revisión | Pruebas presentes en `backend/tests/integration/{solicitudes,admin.crud,catalogos.auth,auth.users}.test.js`; falta completar la revisión de cobertura y cerrar la tarea |
+| T-22 Pruebas de integración y autorización por rol | Hecho | Suite completa verificada: 29 pruebas de integración pasaron contra `db_test` en `localhost:5433`, incluidas comprobaciones de autorización por rol |
 | T-19 Notificaciones | Hecho | API, flujo SSE en vivo, campana con contador y recarga del detalle sin refrescar (requisito 5.5) |
 | T-15 Lista, nueva solicitud y detalle | Hecho | Pantallas de los cuatro roles según el diseño de Claude Design: filtros, paginación, acciones por estado y rol, modales con comentario o resolución, historial y estados de carga, vacío y error |
 | T-16 Modal asignar y tablero de carga | Hecho | `GET /tecnicos/carga`, tablero "Carga de técnicos" y carga actual en el modal de asignar |
@@ -48,7 +48,7 @@ Revisiones formativas: fin de semana 2 (arquitectura y API) y fin de semana 4 (i
 | T-20 Dashboard | Hecho | Indicadores del 5.6 con filtros por periodo, categoría, técnico y cliente; gráfico de evolución con tabla accesible |
 | Diseño responsivo | Hecho | Revisadas a 375 px todas las pantallas, sin desborde horizontal: menú en una fila deslizable, solicitudes como tarjetas y panel de notificaciones a lo ancho |
 | Sesión vencida | Hecho | Un 401 cierra la sesión y lleva al login con aviso (pantallas E08 y E11 del diseño) |
-| T-24 Despliegue | Pendiente | Falta completar y verificar el despliegue del proyecto |
+| T-24 Despliegue | Hecho | Frontend en Cloudflare Pages, API en Railway y PostgreSQL en Neon; aplicación y health check de la API verificados con respuesta 200 |
 | T-25 Manuales, informe de pruebas y video | Pendiente | Faltan consolidar los manuales, el informe final de pruebas y el video |
 
 ## Backlog inicial

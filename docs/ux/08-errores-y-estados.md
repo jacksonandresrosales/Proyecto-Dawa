@@ -27,7 +27,7 @@ Estados que aplican a **todas** las pantallas con sesión:
 
 | Estado | Qué ve el usuario | Cómo sigue |
 |---|---|---|
-| Sin conexión | Banda fija arriba; al guardar, aviso `SIN_CONEXION` | Sigue leyendo; nada se pierde. Al volver la red: toast "Conexión restablecida" |
+| Sin conexión | Error de la operación que no pudo completarse; no hay banda global de conectividad | Reintenta la operación cuando vuelva la red |
 | Sesión vencida (401) | Login con aviso `NO_AUTENTICADO` | Al ingresar con la misma cuenta vuelve a la pantalla donde estaba |
 | Sin permiso (403) | Inicio con aviso `SIN_PERMISO` | — |
 | Error del servidor (500) | Aviso `ERROR_INTERNO`; el formulario conserva lo escrito | Vuelve a enviar |
@@ -76,7 +76,7 @@ Los códigos están en [../tecnico/04-api.md](../tecnico/04-api.md). El texto es
   | Sede | 120 |
   | Nombre de catálogo | 60 |
 
-  Adjuntos: solo PDF, JPG o PNG, 5 MB cada uno, máximo 5 y sin nombres repetidos.
+  Adjuntos: PDF, PNG, JPG, WEBP o TXT, 5 MB cada uno y máximo 5 por solicitud.
 - **Datos que cambian solos:** el plazo se recalcula en pantalla. Si otro usuario cambió la solicitud, se aplican los 409 de arriba. Con varias pestañas abiertas, una ve los cambios de la otra.
 - **Accesibilidad y tamaños:** todo se usa con teclado y funciona con zoom al 200 %, en móvil a 375 px y en modo oscuro.
 

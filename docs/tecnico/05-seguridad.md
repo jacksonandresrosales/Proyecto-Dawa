@@ -37,7 +37,7 @@ El frontend oculta menús y botones según el rol, pero eso es comodidad: la pro
 - Cada endpoint tiene un esquema **Zod** para `body`, `params` y `query`; los campos no declarados se descartan.
 - Prisma usa consultas parametrizadas (sin concatenar SQL).
 - Las contraseñas temporales se muestran únicamente en la respuesta de creación/restablecimiento; nunca se guardan ni se listan en texto plano.
-- Adjuntos: tipos permitidos (PDF, JPG, PNG), máximo 5 MB, nombre de archivo generado por el servidor, guardados fuera de la carpeta pública y servidos solo por un endpoint con permisos.
+- Adjuntos: tipos permitidos (PDF, PNG, JPG, WEBP, TXT), máximo 5 MB, nombre de archivo generado por el servidor, guardados fuera de la carpeta pública y servidos solo por un endpoint con permisos.
 
 ## Cabeceras y CORS
 

@@ -1,6 +1,6 @@
 # Diseño UX — ServiGest
 
-Documentos de diseño previos al desarrollo (semana 1).
+Documentos de diseño iniciales y referencia de experiencia del producto.
 
 | Doc | Contenido |
 |---|---|
@@ -13,6 +13,14 @@ Documentos de diseño previos al desarrollo (semana 1).
 | [07-onboarding.md](07-onboarding.md) | Primer acceso, primeros pasos por rol y estados vacíos |
 | [08-errores-y-estados.md](08-errores-y-estados.md) | Estados de cada pantalla, mensaje de cada error de la API y casos borde |
 | [prototipo.html](prototipo.html) | Prototipo navegable con los 4 roles; abrirlo en el navegador |
+
+## Estado de implementación
+
+La aplicación está desplegada en [Cloudflare Pages](https://servigest-frontend.pages.dev/) y se conecta a la API de Railway con PostgreSQL en Neon. Algunas decisiones del diseño inicial se implementaron de forma distinta:
+
+- Clientes, técnicos y catálogos son pestañas dentro de `/admin`; la gestión de usuarios está en `/admin/usuarios`.
+- El restablecimiento usa `/restablecer?token=...`.
+- Los adjuntos admiten PDF, PNG, JPG, WEBP y TXT, con un máximo de 5 MB por archivo y 5 archivos por solicitud.
 
 ## Decisiones de diseño
 

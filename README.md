@@ -85,6 +85,14 @@ npm run dev:frontend
 La primera vez que se usan las pruebas E2E: `npx playwright install chromium`.
 Las E2E recorren los dos flujos del enunciado en la app real ("registro → asignación → atención" y "consulta → seguimiento → cierre"), así que necesitan el backend corriendo con los datos de `npm run seed:demo`. El frontend lo levanta Playwright si no está abierto.
 
+## Producción
+
+- Aplicación: [servigest-frontend.pages.dev](https://servigest-frontend.pages.dev/)
+- API: [Railway](https://carefree-acceptance-production.up.railway.app); health check: `/api/health`
+- Despliegue: frontend estático en Cloudflare Pages, API Express en Railway y PostgreSQL gestionado en Neon.
+
+La aplicación y el health check de la API responden correctamente. Las variables de conexión y secretos se configuran en los proveedores; no deben guardarse en el repositorio.
+
 ## Estructura
 
 ```

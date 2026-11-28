@@ -71,7 +71,7 @@ servigest/
 | **React + Vite + React Router** | Next.js | El enunciado pide React con API separada; no se necesita renderizado en servidor |
 | **TypeScript (solo frontend)** | JavaScript en todo | shadcn/ui se distribuye en TypeScript y los tipos detectan errores al consumir la API; el backend sigue en JavaScript para no agregar un paso de compilación |
 | **shadcn/ui + Tailwind CSS** | MUI, Bootstrap, CSS a mano | Componentes accesibles (Radix) cuyo código queda en el repositorio (`components/ui/`), por lo que se puede leer, modificar y explicar en la defensa |
-| **react-hook-form + Zod** | Formularios controlados a mano | Validación declarativa y menos renders |
+| **Formularios React + validación HTML; Zod en backend** | `react-hook-form` en frontend | El cliente valida sus campos y la API valida las entradas con esquemas Zod; el frontend no depende de `react-hook-form` ni de Zod |
 | **Vitest + Supertest + Playwright** | Jest, Cypress | Vitest sirve igual para backend y frontend; Supertest prueba la API sin levantar puerto; Playwright cubre los dos flujos E2E |
 | **swagger-ui-express** con `openapi.yaml` | Generar desde comentarios | Un solo archivo de contrato, revisable en PR |
 | **Monorepo** | Dos repositorios | Un solo historial de Git para verificar aportes, una sola CI, documentación en un lugar |
@@ -82,6 +82,6 @@ servigest/
 |---|---|---|
 | Desarrollo | `db` de docker-compose (puerto 5432) | `backend/.env` |
 | Pruebas | `db_test` de docker-compose (puerto 5433) o servicio de CI | `backend/.env.test` |
-| Producción | Servicio gestionado | Variables del proveedor de despliegue |
+| Producción | Neon (PostgreSQL), Railway (API), Cloudflare Pages (frontend) | Variables de entorno configuradas en los proveedores |
 
 Los archivos `.env` no se suben a Git; `.env.example` documenta cada variable.
